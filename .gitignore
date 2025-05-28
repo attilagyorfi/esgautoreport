@@ -1,0 +1,51 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+.env
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Django temp files
+db.sqlite3
+db.sqlite3-journal
+*.log
+
+# IDE / Editor specific files
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln
+*.userprefs
+
+# Media files - feltöltött fájlok, amiket általában nem verziókezelünk
+# Ha a media mappában lévő fájlokat NEM akarod feltölteni:
+media/*
+# Kivétel, ha magát a media mappát (üresen) verziókezelni akarod, 
+# hogy a struktúra meglegyen a repositoryban. Akkor hozz létre egy üres
+# .gitkeep fájlt a media mappában, és a .gitignore-ba ezt írd:
+# !media/.gitkeep 
+# Egyelőre a media/* a legegyszerűbb, ha nem akarod a tartalmát feltölteni.
+
+# Collected static files for production (ha használsz STATIC_ROOT-ot)
+staticfiles_collected/ 
+staticfiles/ # Ezt a nevet használtuk korábban, de a ténylegesen gyűjtött fájlokat nem verziókezeljük.
+
+# Secrets - Nagyon Fontos!
+# Ha a settings.py-ban vannak érzékeny adatok (pl. adatbázis jelszó, SECRET_KEY élesben),
+# akkor vagy a settings.py-t kellene .gitignore-ba tenni (és egy settings.py.example-t használni),
+# vagy környezeti változókból kellene ezeket az adatokat betölteni.
+# Ha a settings.py-t figyelmen kívül akarod hagyni (NEM AJÁNLOTT általában, mert a struktúra kell):
+# esg_project/settings.py 
+# Inkább használj .env fájlt a titkokhoz, és az .env legyen a .gitignore-ban.
+
+# OS specific files
+.DS_Store
+Thumbs.db
+ehthumbs.db

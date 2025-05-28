@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Kapcsolat</h1>
+    <hr>
+    <p>Ha kérdésed, észrevételed vagy javaslatod van az ESG AutoReport platformmal kapcsolatban, kérjük, vedd fel velünk a kapcsolatot az alábbi elérhetőségek valamelyikén.</p>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h4>Központi Elérhetőség</h4>
+            <p>
+                <strong>E-mail:</strong> <a href="mailto:info@esgautoreport.example.com">info@esgautoreport.example.com</a> (Placeholder)<br>
+                <strong>Telefon:</strong> +36 1 234 5678 (Placeholder)<br>
+                <strong>Cím:</strong> 1234 Budapest, Minta utca 10. (Placeholder)
+            </p>
+            <p><em>Kérjük, vedd figyelembe, hogy ezek placeholder elérhetőségek.</em></p>
+        </div>
+        <div class="col-md-6">
+            <h4>Üzenetküldés</h4>
+            <p>Egy jövőbeli fejlesztésként itt egy kapcsolatfelvételi űrlap is helyet kaphat.</p>
+            {# Ide jöhetne egy Django form később #}
+        </div>
+    </div>
+</div>
+{% endblock content %}

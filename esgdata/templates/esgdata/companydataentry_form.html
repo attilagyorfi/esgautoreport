@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"ESG Adat Rögzítése" }} - ESG AutoReport{% endblock title %}
+
+{% block content %}
+    <h1>{{ page_title|default:"ESG Adat Rögzítése" }}</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% for field in form %}
+            <div class="form-field-container" style="margin-bottom: 1em;"> {# Inline stílus csak példa, CSS-be kellene tenni #}
+                <p>
+                    {{ field.label_tag }}<br>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="helptext" style="font-size: 0.9em; color: #666; display: block; margin-top: 3px;">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                        <ul class="errorlist" style="color: red; list-style-type: none; padding-left: 0; font-size: 0.9em;">
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                </p>
+            </div>
+        {% endfor %}
+
+        {% if form.non_field_errors %}
+            <ul class="errorlist" style="color: red; list-style-type: none; padding-left: 0;">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        
+        <p>
+            <button type="submit" style="background-color: #1C8B45; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">Mentés</button>
+        </p>
+    </form>
+{% endblock content %}

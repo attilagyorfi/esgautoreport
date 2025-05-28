@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock title %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ page_title }}</h1>
+    <hr>
+    <p>Ezen az oldalon összegyűjtöttük a legfontosabb ESG szabályozásokra és kapcsolódó útmutatókra mutató hivatkozásokat, hogy segítsük munkádat.</p>
+
+    {% include "dashboard/_regulatory_links.html" %} {# <<< ITT ILLESZTJÜK BE A LINKEKET #}
+
+    <p class="mt-4 text-muted"><small>A Tudástárban szereplő linkek külső weboldalakra mutatnak, tartalmukért és naprakészségükért felelősséget nem vállalunk. Kérjük, mindig ellenőrizd a hivatalos forrásokat!</small></p>
+</div>
+{% endblock content %}

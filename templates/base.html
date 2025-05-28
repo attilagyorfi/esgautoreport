@@ -1,0 +1,184 @@
+{# ESGAutoReport/templates/base.html #}
+{% load static %} {# Statikus fájlok (CSS, JS, képek) betöltéséhez #}
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ESG AutoReport{% endblock title %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+
+    <style>
+        body { 
+            font-family: sans-serif; 
+            background-color: #f8f9fa; 
+            color: #333; 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .main-container { 
+            flex: 1;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        footer { 
+            background-color: #343a40; 
+            color: white; 
+            text-align: center; 
+            padding: 1em 0;
+        }
+        .messages { list-style-type: none; padding: 0; margin: 1em 0; }
+        .messages li { padding: 0.75em; margin-bottom: 0.5em; border-radius: 4px; }
+        .messages li.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .messages li.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .messages li.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .messages li.warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+        .navbar-custom {
+            background-color: #005B96 !important;
+        }
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: white !important;
+        }
+        .navbar-custom .nav-link:hover {
+            color: #f0f0f0 !important;
+        }
+        .navbar-custom .navbar-toggler-icon {
+             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+        }
+
+        @media (min-width: 992px) { /* Bootstrap 'lg' töréspontja: csak nagy képernyőn érvényesül a hover */
+            .navbar-custom .navbar-nav .nav-item.dropdown:hover > .dropdown-menu {
+                display: block;
+                margin-top: 0; /* Eltávolítja az esetleges alapértelmezett felső margót, ami bezárhatná a menüt */
+            }
+            /* Opcionális: Ha azt szeretnéd, hogy a menü nyitva maradjon, amíg az egér a lenyílt menü felett,
+            .navbar-custom .navbar-nav .nav-item.dropdown > .dropdown-menu:hover {
+                display: block;
+                margin-top: 0;
+            }
+            */
+        }
+    </style>
+    {% block extra_head %}{% endblock extra_head %}
+</head>
+<body>
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-custom">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" href="{% url 'dashboard:home' %}">ESG AutoReport</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0"> <!-- me-auto balra igazítja ezt a menüblokkot -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.view_name == 'dashboard:home' %}active{% endif %}" href="{% url 'dashboard:home' %}">Vezérlőpult</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.view_name == 'dashboard:about_us' %}active{% endif %}" href="{% url 'dashboard:about_us' %}">Rólunk</a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if request.resolver_match.app_name == 'esgdata' or request.resolver_match.app_name == 'co2calc' %}active{% endif %}" href="#" id="dataManagementDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Adatkezelés
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="dataManagementDropdown">
+                                <li><a class="dropdown-item {% if request.resolver_match.view_name == 'esgdata:create_company_data_entry' %}active{% endif %}" href="{% url 'esgdata:create_company_data_entry' %}">ESG Alapadatok Rögzítése</a></li>
+                                <li><a class="dropdown-item {% if request.resolver_match.view_name == 'co2calc:manage_co2_entries' %}active{% endif %}" href="{% url 'co2calc:manage_co2_entries' %}">CO₂ Kalkulátor Adatok</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#">Adatimport Excel/CSV (hamarosan)</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Jelentések
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                                <li><a class="dropdown-item" href="#">Új Jelentés Készítése (hamarosan)</a></li>
+                                <li><a class="dropdown-item" href="#">Korábbi Jelentések (hamarosan)</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- ÚJ MENÜPONT: KAPCSOLAT -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.view_name == 'dashboard:contact' %}active{% endif %}" href="{% url 'dashboard:contact' %}">Kapcsolat</a>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0"> <!-- ms-auto jobbra igazítja ezt a menüblokkot -->
+                        {% if user.is_authenticated %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="userMenuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {{ user.username }}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
+                                    <li><a class="dropdown-item" href="#">Profilom (hamarosan)</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">Adminisztráció</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Kijelentkezés</a></li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.view_name == 'accounts:login' %}active{% endif %}" href="{% url 'accounts:login' %}">Bejelentkezés</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.resolver_match.view_name == 'accounts:signup' %}active{% endif %}" href="{% url 'accounts:signup' %}">Regisztráció</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container main-container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    {% if message.tags == 'error' %}
+                        <li class="alert alert-danger">{{ message }}</li>
+                    {% elif message.tags == 'success' %}
+                         <li class="alert alert-success">{{ message }}</li>
+                    {% elif message.tags == 'warning' %}
+                         <li class="alert alert-warning">{{ message }}</li>
+                    {% else %}
+                         <li class="alert alert-info">{{ message }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% block content %}
+            <p>Alapértelmezett tartalom. Ezt a blokkot felül kell írni a gyermek sablonokban.</p>
+        {% endblock content %}
+    </main>
+
+    <footer class="mt-auto py-3 bg-dark text-white">
+        <div class="container text-center">
+            <p class="mb-2">&copy; {% now "Y" %} ESG AutoReport. Minden jog fenntartva.</p>
+            <ul class="list-inline">
+                <li class="list-inline-item"><a href="{% url 'dashboard:home' %}" class="text-white-50">Vezérlőpult</a></li>
+                <li class="list-inline-item"><a href="{% url 'dashboard:about_us' %}" class="text-white-50">Rólunk</a></li>
+                <li class="list-inline-item"><a href="{% url 'esgdata:create_company_data_entry' %}" class="text-white-50">ESG Adatrögzítés</a></li>
+                <li class="list-inline-item"><a href="{% url 'co2calc:manage_co2_entries' %}" class="text-white-50">CO₂ Adatbevitel</a></li>
+                <li class="list-inline-item"><a href="#" class="text-white-50">Új Jelentés</a></li>
+                <li class="list-inline-item"><a href="#" class="text-white-50">Korábbi Jelentések</a></li>
+                <li class="list-inline-item"><a href="{% url 'dashboard:knowledge_base' %}" class="text-white-50">Tudástár</a></li>
+                <li class="list-inline-item"><a href="{% url 'dashboard:contact' %}" class="text-white-50">Kapcsolat</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+
+    {% block extra_js %}{% endblock extra_js %}
+</body>
+</html>

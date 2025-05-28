@@ -1,0 +1,22 @@
+{# accounts/templates/accounts/registration_pending.html #}
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ page_title }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background-color: #f4f4f4; text-align: center; color: #333; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); display: inline-block; }
+        h2 { color: #1C8B45; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>{{ page_title }}</h2>
+        <p>Köszönjük a regisztrációdat!</p>
+        <p>Fiókod jelenleg adminisztrátori jóváhagyásra vár.</p>
+        <p>Amint aktiváltuk a fiókodat, értesítést fogsz kapni (ha az e-mail értesítés be van állítva a rendszerben a felhasználóknak).</p>
+        <p><a href="{% url 'dashboard:home' %}">Vissza a főoldalra</a></p>
+    </div>
+</body>
+</html>
