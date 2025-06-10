@@ -9,25 +9,21 @@ class ChoiceOption(models.Model):
     group_identifier = models.CharField(
         max_length=100,
         db_index=True,
-        blank=True,
-        null=True,
-        verbose_name="Opciócsoport Azonosító",
-        help_text="Azonosító, ami összeköti ezt az opciót a releváns ESG adatponttal (pl. kérdőívben használt lista neve)."
+        verbose_name="Opciócsoport Azonosító (SZTFH)",
+        help_text="Azonosító a 'Legördülő lista' Excelből, ami összeköti ezt az opciócsoportot a releváns ESG adatponttal."
     )
-    # Kiegészítés: Érdemes lenne egy 'value' mezőt is felvenni, ha a tárolt érték más, mint a megjelenített szöveg.
-    # Pl. value = models.CharField(max_length=100, blank=True, null=True)
-    # Egyelőre a 'text' mezőre, vagy az opció ID-jára támaszkodunk.
+    # order = models.IntegerField(default=0, verbose_name="Sorrend") # Ha a sorrend fontos, ezt aktiváld
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.text} (Csoport: {self.group_identifier or 'N/A'})"
+        return f"{self.text} (Csoport: {self.group_identifier})"
 
     class Meta:
-        verbose_name = "Válaszlehetőség"
-        verbose_name_plural = "Válaszlehetőségek"
-        ordering = ['group_identifier', 'text']
+        verbose_name = "Válaszlehetőség (Kérdőívhez)"
+        verbose_name_plural = "Válaszlehetőségek (Kérdőívhez)"
+        ordering = ['group_identifier', 'text']  # vagy ['group_identifier', 'order'] ha sorrend is van
         unique_together = ('group_identifier', 'text')
 # === ÚJ MODELL VÉGE ===
 
@@ -36,119 +32,142 @@ class ESGDataPoint(models.Model):
     PILLAR_ENVIRONMENTAL = 'environmental'
     PILLAR_SOCIAL = 'social'
     PILLAR_GOVERNANCE = 'governance'
-    PILLAR_GENERAL = 'general'  # Általános kérdésekhez
+    PILLAR_GENERAL = 'general'  # Általános kérdésekhez (megmaradhat, vagy az Adatlap kiválthatja)
+    PILLAR_DATASHEET = 'datasheet'  # ÚJ: Adatlap
+    PILLAR_GHG_TARGETS = 'ghg_targets'  # ÚJ: ÜHG Célok
+
     PILLAR_CHOICES = [
         (PILLAR_ENVIRONMENTAL, 'Környezeti (E)'),
         (PILLAR_SOCIAL, 'Társadalmi (S)'),
         (PILLAR_GOVERNANCE, 'Irányítási (G)'),
-        (PILLAR_GENERAL, 'Általános'),
+        (PILLAR_DATASHEET, 'Általános Vállalati Adatlap'),  # ÚJ
+        (PILLAR_GHG_TARGETS, 'ÜHG Emissziós Célok'),        # ÚJ
+        (PILLAR_GENERAL, 'Egyéb Általános Adatok'),         # Esetleg átnevezve, ha az Adatlap nem fedi le teljesen
     ]
 
     # Válasz Típusa (Adattípus)
-    DATATYPE_TEXT = 'text'
+    DATATYPE_TEXT = 'text_long'
+    DATATYPE_SHORT_TEXT = 'text_short'
     DATATYPE_NUMBER = 'number'
     DATATYPE_DATE = 'date'
     DATATYPE_BOOLEAN = 'boolean'
     DATATYPE_DROPDOWN = 'dropdown'
     DATATYPE_FILE = 'file'
-    # DATATYPE_PERCENTAGE = 'percentage'
-    # DATATYPE_CURRENCY = 'currency'
+    DATATYPE_YEAR = 'year'
+    DATATYPE_PERCENTAGE = 'percentage'
+    DATATYPE_CURRENCY_EUR = 'currency_eur'
+    DATATYPE_CURRENCY_HUF = 'currency_huf'
 
     DATATYPE_CHOICES = [
-        (DATATYPE_TEXT, 'Szöveges kifejtés'),
+        (DATATYPE_TEXT, 'Hosszú szöveges válasz'),
+        (DATATYPE_SHORT_TEXT, 'Rövid szöveges válasz'),
         (DATATYPE_NUMBER, 'Szám'),
+        (DATATYPE_YEAR, 'Évszám'),
+        (DATATYPE_PERCENTAGE, 'Százalék'),
+        (DATATYPE_CURRENCY_EUR, 'Pénznem (EUR)'),
+        (DATATYPE_CURRENCY_HUF, 'Pénznem (HUF)'),
         (DATATYPE_DATE, 'Dátum'),
-        (DATATYPE_BOOLEAN, 'Igen/Nem (Logikai)'),
-        (DATATYPE_DROPDOWN, 'Legördülő lista (Választás)'),
+        (DATATYPE_BOOLEAN, 'Igen/Nem'),
+        (DATATYPE_DROPDOWN, 'Legördülő lista'),
         (DATATYPE_FILE, 'Fájl feltöltés'),
     ]
 
+    questionnaire_version = models.CharField(
+        max_length=100,
+        db_index=True,
+        verbose_name="Kérdőív Verzió Azonosító",
+        help_text="Azonosító, melyik SZTFH kérdőívből származik, pl. 'kozepvall_hu_egt_ch_v1'"
+    )
     question_number = models.CharField(
         max_length=30,
         db_index=True,
-        verbose_name="Kérdés Sorszáma (kérdőívben)",
-        help_text="Pl. Á.1.1.a, K.2.1"
+        verbose_name="Kérdés Sorszáma"
     )
-    question_text = models.TextField(verbose_name="Kérdés Szövege / Adatpont Leírása")
-
+    question_text = models.TextField(verbose_name="Kérdés Szövege")
     pillar = models.CharField(
-        max_length=20,
+        max_length=20,  # Lehet, hogy ezt növelni kell, ha hosszabb kulcsokat használunk (pl. 'environmental')
         choices=PILLAR_CHOICES,
-        verbose_name="ESG Pillér"
+        verbose_name="Jelentésrész Kiválasztása"  # Átnevezzük a verbose_name-t
     )
 
-    esrs_topic_standard = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        verbose_name="Kapcsolódó ESRS Topic Standard",
-        help_text="Pl. ESRS E1, ESRS S1, ESRS G1"
-    )
-    esrs_datapoint_definition = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        verbose_name="ESRS Adatpont Kód (pl. DR, AR)",
-        help_text="Az ESRS által definiált adatpont azonosítója, ha van."
-    )
+    esrs_topic_standard = models.CharField(max_length=100, blank=True, null=True, verbose_name="ESRS Topic Standard")
+    esrs_datapoint_definition = models.CharField(max_length=100, blank=True, null=True, verbose_name="ESRS Adatpont Definíció")
 
-    guidance = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Útmutató / Megjegyzés a kitöltéshez"
-    )
-    is_voluntary = models.BooleanField(default=False, verbose_name="Önkéntes Megválaszolású?")
+    guidance = models.TextField(blank=True, null=True, verbose_name="Útmutató/Megjegyzés")
+    is_voluntary = models.BooleanField(default=False, verbose_name="Önkéntes")
 
-    unit_of_measure = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-        verbose_name="Elvárt Mértékegység",
-        help_text="Ha a válasz numerikus, pl. EUR, Fő, óra, kWh, tonna, m3"
-    )
+    unit_of_measure = models.CharField(max_length=100, blank=True, null=True, verbose_name="Elvárt Mértékegység")
     response_data_type = models.CharField(
-        max_length=20,
+        max_length=30,
         choices=DATATYPE_CHOICES,
         default=DATATYPE_TEXT,
         verbose_name="Válasz Adattípusa"
     )
 
-    # Kapcsolat a válaszlehetőségekhez, ha a response_data_type='dropdown'
     choice_option_group = models.CharField(
         max_length=100,
         blank=True,
         null=True,
-        verbose_name="Válaszlehetőség Csoport Azonosító",
-        help_text="A 'Válaszlehetőségek' táblában lévő csoportazonosító, ha a válasz típusa 'Legördülő'."
+        verbose_name="Legördülő Lista Csoportkulcsa",
+        help_text="Azonosító a 'Legördülő lista' Excelből, ha a válasz típusa 'Legördülő'."
     )
 
     applies_to_questionnaire_type = models.CharField(
-        max_length=100,
+        max_length=50,
         blank=True,
         null=True,
-        db_index=True,
-        verbose_name="Releváns Kérdőív Típus(ok)",
-        help_text="Pl. középváll_hu_egt_sv, nagyváll_egyeb. Vesszővel elválasztva több is lehet."
+        verbose_name="Kérdőív Típus"
+    )
+
+    CONTEXT_SAJAT_JELENTO = 'sajat'
+    CONTEXT_BESZALLITO = 'beszallito'
+    CONTEXT_ALTALANOS = 'altalanos'  # Ha nem specifikus
+    CONTEXT_CHOICES = [
+        (CONTEXT_ALTALANOS, 'Általános (nem specifikus)'),
+        (CONTEXT_SAJAT_JELENTO, 'Saját Jelentő Adatlapja'),
+        (CONTEXT_BESZALLITO, 'Beszállítói Adatlap'),
+    ]
+    adatlap_kontextus = models.CharField(
+        max_length=20,
+        choices=CONTEXT_CHOICES,
+        default=CONTEXT_ALTALANOS,
+        verbose_name="Adatlap Kontextusa",
+        blank=True, null=True  # Lehet null, ha nem adatlap típusú kérdés
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    placeholder_text = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        verbose_name="Placeholder szöveg az input mezőhöz"
+    )
+
     def __str__(self):
-        return f"{self.question_number or '?'} - {self.question_text[:70]}{'...' if len(self.question_text) > 70 else ''}"
+        return f"{self.questionnaire_version} - {self.question_number} - {self.question_text[:70]}{'...' if len(self.question_text) > 70 else ''}"
 
     class Meta:
-        verbose_name = "ESG Adatpont (Kérdés)"
-        verbose_name_plural = "ESG Adatpontok (Kérdések)"
-        ordering = ['question_number', 'question_text']
+        verbose_name = "ESG Kérdés (Adatpont)"
+        verbose_name_plural = "ESG Kérdések (Adatpontok)"
+        ordering = ['questionnaire_version', 'question_number']
+        unique_together = ('questionnaire_version', 'question_number')
+
+    def get_choice_options(self):
+        if self.response_data_type == self.DATATYPE_DROPDOWN and self.choice_option_group:
+            return ChoiceOption.objects.filter(group_identifier=self.choice_option_group).order_by('text')
+        return ChoiceOption.objects.none()
 
 class CompanyDataEntry(models.Model):
     STATUS_MISSING = 'missing'
     STATUS_FILLED = 'filled'
     STATUS_VERIFIED = 'verified'
+    STATUS_IN_PROGRESS = 'in_progress'  # <<< ÚJ STÁTUSZ
 
     STATUS_CHOICES = [
         (STATUS_MISSING, 'Hiányzó'),
+        (STATUS_IN_PROGRESS, 'Folyamatban'),  # <<< ÚJ OPCIÓ
         (STATUS_FILLED, 'Kitöltött'),
         (STATUS_VERIFIED, 'Ellenőrzött'),
     ]
@@ -173,9 +192,10 @@ class CompanyDataEntry(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Módosítva (rendszer)")
 
     def __str__(self):
-        company_name = self.company.name if self.company else "Ismeretlen vállalat"
-        datapoint_name = self.data_point.name if self.data_point else "Ismeretlen adatpont"
-        return f"{company_name} - {datapoint_name} ({self.period_year})"
+        company_name = self.company.name if self.company else "Ismeretlen cég"
+        # Módosítsd 'self.data_point.name'-ről 'self.data_point.question_text'-re
+        datapoint_name = self.data_point.question_text if self.data_point else "Ismeretlen adatpont"
+        return f"Adatbevitel: {company_name} - {datapoint_name[:50]}..." # Levágjuk, hogy ne legyen túl hosszú
 
     class Meta:
         verbose_name = "Vállalati ESG Adatbevitel"

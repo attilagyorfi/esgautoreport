@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .models import UserProfile # Importáljuk a UserProfile modellt
+from .models import UserProfile, InvitationToken  # InvitationToken importálása
 
 # Először "unregister"eljük az alap UserAdmin-t, hogy aztán sajátot adhassunk hozzá
 # admin.site.unregister(User) # Erre csak akkor van szükség, ha a UserAdmin-t teljesen felülírnánk, most nem ez a cél.
@@ -46,3 +46,16 @@ admin.site.register(User, CustomUserAdmin) # Majd regisztráljuk az újat
 #     list_select_related = ('user', 'company') # Optimalizálás
 #     search_fields = ('user__username', 'company__name', 'role')
 #     list_filter = ('role', 'company')
+
+@admin.register(InvitationToken)
+class InvitationTokenAdmin(admin.ModelAdmin):
+    list_display = ('token', 'email', 'status', 'expires_at', 'created_by', 'created_at')
+    list_filter = ('status', 'expires_at', 'created_by')
+    search_fields = ('email', 'token')
+    readonly_fields = ('token', 'created_at', 'updated_at')
+    fields = ('email', 'status', 'expires_at', 'created_by')  # A 'token' readonly, automatikusan generálódik
+
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:  # Csak új objektum létrehozásakor
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)

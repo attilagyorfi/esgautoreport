@@ -1,0 +1,150 @@
+{# ESGAutoReport/accounts/templates/accounts/register_with_token.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ page_title|default:"Regisztráció Meghívóval" }} - ESGAutoReport{% endblock title %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <style>
+        .register-page-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+            padding: 40px 0;
+        }
+        .register-box {
+            background-color: var(--white-background);
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        .register-box h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+        .register-box .form-field-container { margin-bottom: 1rem; }
+        .register-box .form-field-container label {
+            font-family: var(--font-primary);
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            color: var(--supporting-gray);
+            display: block;
+        }
+        .register-box .form-field-container .required-star {
+            color: var(--warning-red);
+            font-weight: bold;
+            margin-left: 2px;
+        }
+        .register-box input[type="text"],
+        .register-box input[type="email"],
+        .register-box input[type="password"],
+        .register-box select,
+        .register-box textarea {
+            display: block;
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            font-size: 1rem;
+            font-family: var(--font-primary);
+            font-weight: 400;
+            line-height: 1.5;
+            color: #212529;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            appearance: none;
+            border-radius: 0.3rem;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+        .register-box input[type="text"]:focus,
+        .register-box input[type="email"]:focus,
+        .register-box input[type="password"]:focus,
+        .register-box select:focus,
+        .register-box textarea:focus {
+            border-color: var(--esg-green);
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(28, 124, 84, 0.25);
+        }
+        .register-box .helptext {
+            font-size: 0.85em; color: #6c757d; display: block; margin-top: 5px;
+            font-family: var(--font-primary);
+        }
+        .register-box .errorlist {
+            color: var(--warning-red); list-style-type: none; padding-left: 0;
+            font-size: 0.9em; margin-top: 5px; font-family: var(--font-primary);
+        }
+        .register-box button[type="submit"] {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 1.05rem;
+            margin-top: 1rem;
+        }
+        .register-box .login-link {
+            text-align: center; margin-top: 20px; font-family: var(--font-primary);
+        }
+    </style>
+{% endblock extra_head %}
+
+{% block content %}
+<div class="register-page-container">
+    <div class="register-box">
+        <h2>{{ page_title|default:"Regisztráció Meghívóval" }}</h2>
+
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form.token }}
+
+            <fieldset>
+                <legend style="font-size: 1.2rem; font-family: var(--font-headings); color: var(--esg-green); margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">Személyes adatok</legend>
+                {% for field in form %}
+                    {% if field.name == 'user_email' or field.name == 'user_first_name' or field.name == 'user_last_name' or field.name == 'password' or field.name == 'password_confirm' %}
+                        <div class="form-field-container">
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                                {% if field.field.required %}<span class="required-star">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}<small class="helptext">{{ field.help_text|safe }}</small>{% endif %}
+                            {% for error in field.errors %}<div class="errorlist"><li>{{ error }}</li></div>{% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </fieldset>
+            
+            <fieldset style="margin-top: 2rem;">
+                <legend style="font-size: 1.2rem; font-family: var(--font-headings); color: var(--esg-green); margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">Vállalati adatok</legend>
+                {% for field in form %}
+                    {% if field.name != 'user_email' and field.name != 'user_first_name' and field.name != 'user_last_name' and field.name != 'password' and field.name != 'password_confirm' and field.name != 'token' %}
+                        <div class="form-field-container">
+                            <label for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                                {% if field.field.required %}<span class="required-star">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}<small class="helptext">{{ field.help_text|safe }}</small>{% endif %}
+                            {% for error in field.errors %}<div class="errorlist"><li>{{ error }}</li></div>{% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </fieldset>
+            
+            <button type="submit" class="btn btn-cta">Regisztráció Befejezése</button>
+        </form>
+        <div class="login-link">
+            <p>Már van fiókod? <a href="{% url 'accounts:login' %}">Jelentkezz be!</a></p>
+        </div>
+    </div> {# .register-box vége #}
+</div> {# .register-page-container vége #}
+{% endblock content %}

@@ -1,0 +1,172 @@
+{# esgdata/templates/esgdata/create_esg_report.html #}
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block title %}{{ page_title|default:"ESG Jelentés Készítése" }} - ESG AutoReport{% endblock title %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <style>
+        .form-page-container {
+            max-width: 900px; margin: 2rem auto; padding: 2rem;
+            background-color: var(--white-background);
+            border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .form-page-container h1 { margin-bottom: 1.5rem; text-align: center; }
+        .intro-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--esg-green);
+            border-radius: 0.25rem;
+        }
+        .intro-section h4 {
+            font-family: var(--font-headings);
+            color: var(--esg-green);
+            margin-bottom: 0.75rem;
+        }
+        .intro-section p, .intro-section ul {
+            font-family: var(--font-primary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .intro-section ul {
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .form-selector-section, .questions-section { margin-bottom: 2rem; }
+        .form-field-container { margin-bottom: 1rem; }
+        .form-field-container label { font-weight: 600; display: block; margin-bottom: 0.35rem; }
+        .form-field-container .required-star { color: var(--warning-red); font-weight: bold; margin-left: 2px; }
+
+        /* Input, Select stílusok (a korábbi adatbeviteli űrlap stílusaihoz hasonlóan) */
+        .form-field-container input[type="text"],
+        .form-field-container input[type="number"],
+        .form-field-container select {
+            display: block; width: 100%; padding: 0.6rem 0.75rem; font-size: 1rem;
+            font-family: var(--font-primary); color: var(--supporting-gray);
+            background-color: #fff; border: 1px solid #ced4da;
+            appearance: none; border-radius: 0.3rem;
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+        .form-field-container input:focus,
+        .form-field-container select:focus {
+            border-color: var(--esg-green); outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(28, 124, 84, 0.25);
+        }
+        .question-item {
+            padding: 1rem; border: 1px solid #f0f0f0; border-radius: 0.3rem;
+            margin-bottom: 1rem; background-color: #fdfdfd;
+        }
+        .question-item .form-label {
+            font-weight: normal;
+            color: var(--supporting-gray);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .question-section-title {
+            font-family: var(--font-headings);
+            color: var(--esg-green);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--esg-green);
+        }
+    </style>
+{% endblock extra_head %}
+
+{% block content %}
+<div class="form-page-container">
+    <h1>{{ page_title }}</h1>
+
+    <!-- ÚJ: Bevezető és útmutató szakasz -->
+    <div class="intro-section">
+        <h4>Üdvözlünk az ESG Jelentés Készítőben!</h4>
+        <p>Ezen az oldalon lehetőséged van a vállalatod ESG (Környezeti, Társadalmi és Irányítási) teljesítményéhez kapcsolódó adatokat rögzíteni az Excel formátumú kérdőívek alapján.</p>
+        <h5>Hogyan használd:</h5>
+        <ul>
+            <li><strong>Válaszd ki a Vállalatot:</strong> Jelöld ki azt a céget, amelyhez az adatokat rögzíteni szeretnéd.</li>
+            <li><strong>Add meg a Jelentési Évet:</strong> Válaszd ki a legördülő listából azt az évet, amelyre a jelentés vonatkozik.</li>
+            <li><strong>Válaszd ki az ESG Pillért:</strong> Dönts az E (Környezeti), S (Társadalmi), vagy G (Irányítási) pillér mellett.</li>
+            <li><strong>Kérdések Betöltése:</strong> Kattints a "Kérdések Betöltése" gombra. Megjelennek a kiválasztott pillérhez tartozó kérdések.</li>
+            <li><strong>Válaszadás:</strong> Töltsd ki a megjelenő kérdőívet a vállalatodra vonatkozó adatokkal. Minden kérdésnél beállíthatod az adat státuszát (pl. Hiányzó, Folyamatban, Kitöltött).</li>
+            <li><strong>Mentés:</strong> Ha végeztél, a "Válaszok Mentése" gombbal rögzítheted az adatokat.</li>
+        </ul>
+        <p>A feltöltött adatok alapján később részletes ESG jelentéseket generálhatsz.</p>
+    </div>
+    <!-- Bevezető és útmutató szakasz vége -->
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {# Kezdeti kiválasztó űrlap, ha még nem történt meg a kiválasztás #}
+        {% if not questions_loaded %}
+        <div class="form-selector-section">
+            <h5>Kérjük, válassza ki a jelentés alapadatait:</h5>
+            {% for field in form %}
+                <div class="form-field-container">
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                        {% if field.field.required %}<span class="required-star">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}<small class="helptext">{{ field.help_text|safe }}</small>{% endif %}
+                    {% for error in field.errors %}<div class="errorlist field-error"><li>{{ error }}</li></div>{% endfor %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn-cta mt-3" name="load_questions">Kérdések Betöltése</button>
+        </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                Kiválasztva: <strong>{{ selected_company.name }}</strong>, Év: <strong>{{ selected_year }}</strong>, Témakör: <strong>{{ selected_topic_display }}</strong>.
+                (<a href="{% url 'esgdata:create_esg_report' %}">Másik témakör választása</a>)
+            </div>
+        {% endif %}
+
+        {# Kérdések megjelenítése, ha be vannak töltve #}
+        {% if questions_loaded %}
+            <div class="questions-section">
+                {% if selected_topic_key == 'datasheet' %}
+                    {% if sajat_jelento_adatok %}
+                        <h3 class="question-section-title">Az ESG beszámolót és annak mellékletét képező kérdőívet benyújtó adatai</h3>
+                        {% for esg_question in sajat_jelento_adatok %}
+                            {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if beszallito_kitolto_adatok %}
+                        <h3 class="question-section-title">ESG kérdőívet kitöltő adatai</h3>
+                        {% for esg_question in beszallito_kitolto_adatok %}
+                            {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if beszallito_kero_adatok %}
+                        <h3 class="question-section-title">ESG Kérdőív kitöltését kérő vállalkozás adatai</h3>
+                        {% for esg_question in beszallito_kero_adatok %}
+                            {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                        {% endfor %}
+                    {% endif %}
+                
+                {% elif other_topic_questions %}
+                     <h3 class="question-section-title">{{ selected_topic_display }} Kérdései</h3>
+                     {% for esg_question in other_topic_questions %}
+                        {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                     {% endfor %}
+                {% else %}
+                    {% if selected_topic_key %}
+                    <p class="text-muted mt-3">Nincsenek kérdések ehhez a kiválasztott témakörhöz ("{{ selected_topic_display }}").</p>
+                    {% endif %}
+                {% endif %}
+                
+                {% if sajat_jelento_adatok or beszallito_kitolto_adatok or beszallito_kero_adatok or other_topic_questions %}
+                    <hr class="my-4">
+                    <button type="submit" class="btn btn-cta btn-lg" name="save_answers">Válaszok Mentése</button>
+                {% endif %}
+            </div>
+        {% endif %}
+    </form>
+</div>
+{% endblock content %}

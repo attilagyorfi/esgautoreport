@@ -1,61 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Vezérlőpult - ESG AutoReport{% endblock title %}
+{% block title %}{{ page_title|default:"Vezérlőpult" }} - ESG AutoReport{% endblock title %}
 
-{% block extra_head %}
-{# Egyedi CSS a hero szekcióhoz és a videóhoz #}
-<style>
-    .hero-section {
-        position: relative;
-        height: 75vh;
-        width: 100vw;
-        margin-left: calc(-50vw + 50%);
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        color: white;
-    }
-    #hero-video {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transform: translate(-50%, -50%);
-        z-index: -2;
-    }
-    .hero-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.4);
-        z-index: -1;
-    }
-    .hero-content {
-        position: relative;
-        z-index: 1;
-        padding: 20px;
-    }
-    .hero-content h1 {
-        font-size: 3.5rem;
-        font-weight: bold;
-        margin-bottom: 0.5em;
-        color: white;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-    }
-    .hero-content p {
-        font-size: 1.5rem;
-        margin-bottom: 1em;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
-    }
-</style>
-{% endblock extra_head %}
 
 {% block content %}
 <div class="hero-section">
@@ -66,51 +13,45 @@
     <div class="hero-overlay"></div>
     <div class="hero-content">
         <h1>ESG AutoReport</h1>
-        <p>Egyszerű, gyors és hiteles ESG jelentéstétel.</p>
-        {# Ide jöhetne egy gomb is, pl. {% url 'accounts:signup' %} #}
+        <p>{{ jelmondat|default:"Automatizált ESG jelentések – gyorsabban, pontosabban, egyszerűbben" }}</p>
+        {# <a href="#" class="btn btn-cta btn-cta-hero">Ismerd meg jobban!</a> #}
     </div>
 </div>
 
-<div class="container mt-4">
+<div class="page-content-container mt-4">
+    <!-- Statisztikai kártyák -->
     <div class="row">
-        <!-- Oszlop 1: Rendszerstatisztikák -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 info-card">
                 <div class="card-body">
-                    <h5 class="card-title" style="color: #005B96;">Rendszerstatisztikák</h5>
-                    <ul class="list-unstyled">
-                        <li>Regisztrált vállalatok: <strong>{{ num_companies }}</strong></li>
-                        <li>Definiált ESG adatpontok: <strong>{{ num_esg_data_points }}</strong></li>
-                        <li>Rögzített adatbevitelek: <strong>{{ num_company_data_entries }}</strong></li>
-                    </ul>
+                    <h5 class="card-title">Rendszerstatisztikák</h5>
+                    <p class="card-text">
+                        Regisztrált vállalatok: <strong>{{ num_companies }}</strong><br>
+                        Definiált ESG adatpontok: <strong>{{ num_esg_data_points }}</strong><br>
+                        Rögzített adatbevitelek: <strong>{{ num_company_data_entries }}</strong>
+                    </p>
                 </div>
             </div>
         </div>
-
-        <!-- Oszlop 2: Fontos Értesítések -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100 info-card">
                 <div class="card-body">
-                    <h5 class="card-title" style="color: #005B96;">Fontos Értesítések</h5>
+                    <h5 class="card-title">Fontos Értesítések</h5>
                     <p class="card-text">Hamarosan itt jelennek meg az aktuális értesítéseid és emlékeztetőid.</p>
-                    <a href="#" class="btn btn-sm mt-2" style="background-color: #1C8B45; color: white;">Összes értesítés</a>
+                    <a href="#" class="btn btn-cta mt-auto">Összes értesítés</a>
                 </div>
             </div>
         </div>
-
-        <!-- Oszlop 3: Gyors Akciók -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title" style="color: #005B96;">Gyors Akciók</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="{% url 'esgdata:create_company_data_entry' %}" class="card-link">Új ESG Adat Rögzítése</a></li>
-                        <li><a href="{% url 'co2calc:manage_co2_entries' %}" class="card-link">CO₂ Adatbevitel Kezelése</a></li>
-                        <li><a href="#" class="card-link">Jelentés Generálása (hamarosan)</a></li>
-                    </ul>
-                </div>
+        <div class="col-md-4 mb-3">
+        <div class="card h-100 info-card">
+            <div class="card-body"> {# A d-flex flex-column innen kivehető, ha már nincs alulra igazítandó gomb #}
+                <h5 class="card-title">Gyors Akciók</h5>
+                <ul> {# Az mb-auto osztályt is eltávolítottam #}
+                    <li><a href="{% url 'esgdata:create_esg_report_selection' %}" class="card-link">ESG Jelentés Készítése</a></li>
+                    <li><a href="#" class="card-link">Korábbi Jelentések (hamarosan)</a></li>
+                </ul>
             </div>
         </div>
     </div>
-</div>
+    </div>
 {% endblock content %}

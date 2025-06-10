@@ -10,5 +10,7 @@ urlpatterns = [
     path('kapcsolat/', views.contact_view, name='contact'),
     path('tudastar/', views.knowledge_base_view, name='knowledge_base'),
     path('company-setup/', views.company_setup_view, name='company_setup'),
+    path('data-management-overview/', views.data_management_overview_view, name='data_management_overview'),
+
 
 ]

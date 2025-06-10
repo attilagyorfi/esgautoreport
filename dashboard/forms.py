@@ -1,27 +1,15 @@
 # dashboard/forms.py
 from django import forms
-from django.utils.translation import gettext_lazy as _ # Fordításhoz
+from django.utils.translation import gettext_lazy as _
+from companies.models import TEORCode
+from accounts.choices import QUESTIONNAIRE_TYPE_CHOICES
 
-# Ezeknek a kulcsoknak és értékeknek konzisztensnek kell lenniük azzal,
-# amit az UserProfile modell 'primary_questionnaire_type' mezőjének choices-ában,
-# és az ESGDataPoint modell 'applies_to_questionnaire_type' mezőjében használni fogunk.
-# Érdemes lehet ezeket egy központi helyre (pl. egy choices.py fájlba) kiszervezni később.
-QUESTIONNAIRE_TYPE_CHOICES = [
-    ('', '--------- Kérjük, válasszon kérdőív típust! ---------'),
-    ('sztfh_sajat_teljes', 'Saját Vállalat Teljes ESG Kérdőíve (SZTFH alapján)'),
-    # A 12 szállítói kategória az SZTFH rendelet 4. § (10) alapján:
-    ('sztfh_nagyvall_hu_egt_ch', 'Beszállító: Nagyvállalat (HU, EGT, CH)'),
-    ('sztfh_kozepvall_hu_egt_ch', 'Beszállító: Középvállalkozás (HU, EGT, CH)'),
-    ('sztfh_kisvall_hu_egt_ch', 'Beszállító: Kisvállalkozás (HU, EGT, CH)'),
-    ('sztfh_mikrovall_hu_egt_ch', 'Beszállító: Mikrovállalkozás (HU, EGT, CH)'),
-    ('sztfh_nagyvall_oecd_non_hu', 'Beszállító: Nagyvállalat (OECD, nem HU/EGT/CH)'),
-    ('sztfh_kozepvall_oecd_non_hu', 'Beszállító: Középvállalkozás (OECD, nem HU/EGT/CH)'),
-    ('sztfh_kisvall_oecd_non_hu', 'Beszállító: Kisvállalkozás (OECD, nem HU/EGT/CH)'),
-    ('sztfh_mikrovall_oecd_non_hu', 'Beszállító: Mikrovállalkozás (OECD, nem HU/EGT/CH)'),
-    ('sztfh_nagyvall_other', 'Beszállító: Nagyvállalat (Egyéb ország)'),
-    ('sztfh_kozepvall_other', 'Beszállító: Középvállalkozás (Egyéb ország)'),
-    ('sztfh_kisvall_other', 'Beszállító: Kisvállalkozás (Egyéb ország)'),
-    ('sztfh_mikrovall_other', 'Beszállító: Mikrovállalkozás (Egyéb ország)'),
+COMPANY_SIZE_CHOICES = [
+    ('', _('Mindegyik méret')),
+    ('mikrovall', _('Mikrovállalkozás')),
+    ('kisvall', _('Kisvállalkozás')),
+    ('kozepvall', _('Középvállalkozás')),
+    ('nagyvall', _('Nagyvállalat')),
 ]
 
 class CompanyAndQuestionnaireSelectForm(forms.Form):
@@ -40,24 +28,22 @@ class CompanyAndQuestionnaireSelectForm(forms.Form):
     registration_number = forms.CharField(
         label=_("Cégjegyzékszám"),
         max_length=50,
-        required=False, # Ez legyen opcionális, ha nem minden esetben van
+        required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Pl. 01-09-123456'})
     )
     address = forms.CharField(
         label=_("Székhely / Hivatalos Cím"), 
         widget=forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Pl. 1234 Budapest, Minta utca 10.'}),
-        required=False # Ez is legyen opcionális
+        required=False
     )
     questionnaire_type = forms.ChoiceField(
-        label=_("Kitöltendő Kérdőív Típusa"), 
-        choices=QUESTIONNAIRE_TYPE_CHOICES, 
+        label=_("Kitöltendő Kérdőív Típusa"),
+        choices=QUESTIONNAIRE_TYPE_CHOICES,  # <--- ITT HASZNÁLD AZ IMPORTÁLT VÁLTOZÓT
         required=True,
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
     def __init__(self, *args, **kwargs):
-        # A 'user' argumentumot a nézetből (view) fogjuk átadni,
-        # hogy elő tudjuk tölteni az űrlapot a felhasználó meglévő cégadataival, ha vannak.
         self.user = kwargs.pop('user', None) 
         super().__init__(*args, **kwargs)
 
@@ -73,3 +59,23 @@ class CompanyAndQuestionnaireSelectForm(forms.Form):
 
         if self.user and self.user.is_authenticated and hasattr(self.user, 'profile') and self.user.profile and self.user.profile.primary_questionnaire_type:
             self.fields['questionnaire_type'].initial = self.user.profile.primary_questionnaire_type
+
+class CompanyFilterForm(forms.Form):
+    teor_code = forms.ModelChoiceField(
+        queryset=TEORCode.objects.all().order_by('name'),
+        required=False,
+        label=_("TEÁOR Szerint"),
+        empty_label=_("Összes TEÁOR kód"),
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm mb-2'})
+    )
+    company_size_filter = forms.ChoiceField(
+        choices=COMPANY_SIZE_CHOICES,
+        required=False,
+        label=_("Cégméret Szerint"),
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm mb-2'})
+    )
+    tax_number_search = forms.CharField(
+        required=False,
+        label=_("Adószám Keresés"),
+        widget=forms.TextInput(attrs={'class': 'form-control form-control-sm mb-2', 'placeholder': 'Adószám...'})
+    )

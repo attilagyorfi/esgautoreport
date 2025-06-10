@@ -1,43 +1,147 @@
+{# esgdata/templates/esgdata/companydataentry_form.html #}
 {% extends "base.html" %}
-{% load static %}
+{% load static %} {# Szükség lehet rá, ha pl. widget_tweaks filtereket használnánk #}
 
 {% block title %}{{ page_title|default:"ESG Adat Rögzítése" }} - ESG AutoReport{% endblock title %}
 
+{% block extra_head %}
+    {{ block.super }}
+    <style>
+        .form-page-container { /* Konténer az egész űrlap oldalnak */
+            max-width: 800px; /* Vagy amekkora szélességet szeretnénk */
+            margin: 2rem auto; /* Középre igazítás és térköz */
+            padding: 2rem;
+            background-color: var(--white-background);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .form-page-container h1 {
+            /* A base.html-ből örökli a stílust, de itt lehet finomítani */
+            margin-bottom: 1.5rem;
+            text-align: center; /* Középre igazított cím */
+        }
+
+        /* Mezők konténere és címkék */
+        .form-field-container {
+            margin-bottom: 1.25rem; /* Térköz a mezők között */
+        }
+        .form-field-container label {
+            font-family: var(--font-primary);
+            font-weight: 600; /* Semibold */
+            color: var(--supporting-gray);
+            display: block;
+            margin-bottom: 0.35rem;
+        }
+        .form-field-container .required-star {
+            color: var(--warning-red);
+            font-weight: bold;
+            margin-left: 2px;
+        }
+
+        /* Input, Select, Textarea mezők általános stílusa */
+        .form-field-container input[type="text"],
+        .form-field-container input[type="number"], /* Number input is gyakori adatbevitelkor */
+        .form-field-container input[type="email"],
+        .form-field-container input[type="password"],
+        .form-field-container input[type="file"], /* File input is lehet itt */
+        .form-field-container select,
+        .form-field-container textarea {
+            display: block;
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            font-size: 1rem;
+            font-family: var(--font-primary);
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--supporting-gray); /* Sötétebb szürke a jobb olvashatóságért */
+            background-color: #fff; /* Fehér háttér az inputoknak */
+            background-clip: padding-box;
+            border: 1px solid #ced4da; /* Standard Bootstrap keret */
+            appearance: none; /* Eltávolítja a böngésző alapértelmezett stílusait (főleg selectnél) */
+            border-radius: 0.3rem;
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+        /* Dátum input speciális stílusa, ha kell (pl. a placeholder miatt) */
+        .form-field-container input[type="date"] {
+            /* Itt lehet egyedi stílusokat adni, ha a böngésző alapértelmezettje nem megfelelő */
+        }
+
+        .form-field-container input:focus,
+        .form-field-container select:focus,
+        .form-field-container textarea:focus {
+            border-color: var(--esg-green);
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(28, 124, 84, 0.25); /* ESG zöld focus glow */
+        }
+        /* File input gombjának stilizálása trükkös, Bootstrapnek vannak rá megoldásai,
+           vagy egyedi JS/CSS kellhet a szépítéshez. Most az alap böngésző stílus marad. */
+
+        .form-field-container .helptext {
+            font-size: 0.85em;
+            color: #6c757d; /* Bootstrap text-muted színhez hasonló */
+            display: block;
+            margin-top: 0.3rem;
+            font-family: var(--font-primary);
+        }
+        .form-field-container .errorlist { /* Django form hibaüzenetek */
+            color: var(--warning-red);
+            list-style-type: none;
+            padding-left: 0;
+            font-size: 0.9em;
+            margin-top: 0.3rem;
+            font-family: var(--font-primary);
+        }
+        .form-field-container .errorlist li {
+            margin-bottom: 0.2rem;
+        }
+
+        /* Mentés gomb */
+        .form-page-container button[type="submit"] {
+            /* A .btn-cta stílust a base.html-ből örökli */
+            display: block; /* Hogy a margin: auto működjön */
+            margin: 2rem auto 0 auto; /* Felül nagyobb térköz, és középre igazítás */
+            min-width: 150px; /* Minimális szélesség */
+        }
+
+    </style>
+{% endblock extra_head %}
+
 {% block content %}
+<div class="form-page-container"> {# Új külső konténer az űrlapnak #}
     <h1>{{ page_title|default:"ESG Adat Rögzítése" }}</h1>
 
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" novalidate> {# novalidate a Django validációhoz #}
         {% csrf_token %}
         
-        {% for field in form %}
-            <div class="form-field-container" style="margin-bottom: 1em;"> {# Inline stílus csak példa, CSS-be kellene tenni #}
-                <p>
-                    {{ field.label_tag }}<br>
-                    {{ field }}
-                    {% if field.help_text %}
-                        <small class="helptext" style="font-size: 0.9em; color: #666; display: block; margin-top: 3px;">{{ field.help_text }}</small>
-                    {% endif %}
-                    {% if field.errors %}
-                        <ul class="errorlist" style="color: red; list-style-type: none; padding-left: 0; font-size: 0.9em;">
-                        {% for error in field.errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                        </ul>
-                    {% endif %}
-                </p>
-            </div>
-        {% endfor %}
-
         {% if form.non_field_errors %}
-            <ul class="errorlist" style="color: red; list-style-type: none; padding-left: 0;">
+            <ul class="errorlist non-field-errors" style="padding: 0.5rem; background-color: #f8d7da; border-radius: 0.3rem; margin-bottom:1rem;">
                 {% for error in form.non_field_errors %}
                     <li>{{ error }}</li>
                 {% endfor %}
             </ul>
         {% endif %}
+
+        {% for field in form %}
+            <div class="form-field-container">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span class="required-star">*</span>
+                    {% endif %}
+                </label>
+                {{ field }} {# Itt a CSS a mező típusa alapján fogja formázni #}
+                {% if field.help_text %}
+                    <small class="helptext">{{ field.help_text|safe }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div class="errorlist field-error"><li>{{ error }}</li></div>
+                {% endfor %}
+            </div>
+        {% endfor %}
         
         <p>
-            <button type="submit" style="background-color: #1C8B45; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">Mentés</button>
+            <button type="submit">Mentés</button> {# Felveszi a globális button[type="submit"] stílust #}
         </p>
     </form>
+</div>
 {% endblock content %}

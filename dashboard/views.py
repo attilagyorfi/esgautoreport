@@ -10,18 +10,42 @@ from django.contrib import messages
 from companies.models import CompanyProfile
 from esgdata.models import ESGDataPoint, CompanyDataEntry
 from accounts.models import UserProfile
-from .forms import CompanyAndQuestionnaireSelectForm
+from .forms import CompanyAndQuestionnaireSelectForm, CompanyFilterForm  # Az új szűrő form importálása
+from django.db.models import Q
 
 def home_view(request):
-    # Adatok lekérdezése az adatbázisból
-    num_companies = CompanyProfile.objects.count()
+    num_companies_total = CompanyProfile.objects.count()
     num_esg_data_points = ESGDataPoint.objects.count()
     num_company_data_entries = CompanyDataEntry.objects.count()
 
+    companies_list = CompanyProfile.objects.select_related('industry').all().order_by('name')
+    filter_form = CompanyFilterForm(request.GET or None)
+    search_active = False
+
+    if filter_form.is_valid():
+        teor_code = filter_form.cleaned_data.get('teor_code')
+        company_size_key = filter_form.cleaned_data.get('company_size_filter')
+        tax_number = filter_form.cleaned_data.get('tax_number_search')
+
+        if teor_code:
+            companies_list = companies_list.filter(industry=teor_code)
+            search_active = True
+        if tax_number:
+            companies_list = companies_list.filter(tax_number__icontains=tax_number)
+            search_active = True
+        if company_size_key:
+            matching_user_profiles = UserProfile.objects.filter(
+                primary_questionnaire_type__icontains=company_size_key
+            ).values_list('company_id', flat=True).distinct()
+            companies_list = companies_list.filter(pk__in=list(matching_user_profiles))
+            search_active = True
+
+        if not (teor_code or company_size_key or tax_number):
+            search_active = False
+
     context = {
-        'page_title': 'ESG AutoReport Főoldal',
-        'welcome_message': 'Üdvözöllek az ESG AutoReport rendszerben!',
-        'num_companies': num_companies,
+        'page_title': 'ESG AutoReport Vezérlőpult',
+        'num_companies': num_companies_total,
         'num_esg_data_points': num_esg_data_points,
         'num_company_data_entries': num_company_data_entries,
     }
@@ -45,6 +69,13 @@ def knowledge_base_view(request):
         'page_title': 'Tudástár - ESG Szabályozás',
     }
     return render(request, 'dashboard/knowledge_base.html', context)
+
+
+def data_management_overview_view(request):
+    context = {
+        'page_title': 'Adatkezelés - Áttekintés'
+    }
+    return render(request, 'dashboard/data_management_overview.html', context)
 
 @login_required
 def company_setup_view(request):

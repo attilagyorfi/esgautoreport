@@ -1,0 +1,62 @@
+{# esgdata/templates/esgdata/fill_questionnaire.html #}
+{% extends "base.html" %}
+{% load static %} {# Ha kellenek static fájlok vagy custom filterek #}
+{% load custom_filters %} {# Ha használod a get_item vagy filename filtert #}
+
+{% block title %}{{ page_title|default:"ESG Kérdőív Kitöltése" }}{% endblock title %}
+
+
+{% block content %}
+<div class="form-page-container">
+    <h1>{{ page_title }}</h1>
+
+    <div class="selection-summary">
+        Kiválasztott vállalat: <strong>{{ selected_company.name }}</strong> |
+        Év: <strong>{{ selected_year }}</strong> |
+        Témakör: <strong>{{ selected_topic_display }}</strong>
+        <a href="{% url 'esgdata:create_esg_report_selection' %}" class="ms-3 badge bg-secondary text-white text-decoration-none">Másik témakör/vállalat választása</a>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        <div class="questions-section">
+            {% if selected_topic_key == 'datasheet' %}
+                {% if sajat_jelento_adatok %}
+                    <h3 class="question-section-title">Az ESG beszámolót és annak mellékletét képező kérdőívet benyújtó adatai</h3>
+                    {% for esg_question in sajat_jelento_adatok %}
+                        {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                    {% endfor %}
+                {% endif %}
+                {% if beszallito_kitolto_adatok %}
+                    <h3 class="question-section-title">ESG kérdőívet kitöltő adatai</h3>
+                    {% for esg_question in beszallito_kitolto_adatok %}
+                        {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                    {% endfor %}
+                {% endif %}
+                {% if beszallito_kero_adatok %}
+                    <h3 class="question-section-title">ESG Kérdőív kitöltését kérő vállalkozás adatai</h3>
+                    {% for esg_question in beszallito_kero_adatok %}
+                        {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                    {% endfor %}
+                {% endif %}
+            {% elif other_topic_questions %}
+                 <h3 class="question-section-title">{{ selected_topic_display }} Kérdései</h3>
+                 {% for esg_question in other_topic_questions %}
+                    {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                 {% endfor %}
+            {% else %}
+                {% if selected_topic_key %}
+                <p class="text-muted mt-3">Nincsenek kérdések ehhez a kiválasztott témakörhöz ("{{ selected_topic_display }}"). Kérjük, ellenőrizze, hogy az adatimportálás sikeres volt-e.</p>
+                {% else %}
+                     <p class="text-muted mt-3">Nincs kiválasztott témakör. Kérjük, <a href="{% url 'esgdata:create_esg_report_selection' %}">válasszon egyet</a>.</p>
+                {% endif %}
+            {% endif %}
+
+            {% if sajat_jelento_adatok or beszallito_kitolto_adatok or beszallito_kero_adatok or other_topic_questions %}
+                <hr class="my-4">
+                <button type="submit" class="btn btn-cta btn-lg" name="save_answers">Válaszok Mentése</button>
+            {% endif %}
+        </div>
+    </form>
+</div>
+{% endblock content %}

@@ -1,0 +1,92 @@
+{# accounts/templates/accounts/registration_show_token_link.html #}
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - ESG AutoReport{% endblock title %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <style>
+        .token-display-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 70vh;
+            padding: 20px 0;
+        }
+        .token-display-box {
+            background-color: var(--white-background);
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 650px; /* Lehet szélesebb az információnak */
+            text-align: center;
+        }
+        .token-display-box h2 {
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        .token-display-box p {
+            font-family: var(--font-primary);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            color: var(--supporting-gray);
+        }
+        .token-display-box .profile-link {
+            display: inline-block;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            padding: 12px 25px;
+            background-color: var(--esg-green);
+            color: var(--white-background);
+            text-decoration: none;
+            border-radius: 5px;
+            font-family: var(--font-headings);
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: background-color 0.2s ease;
+        }
+        .token-display-box .profile-link:hover {
+            background-color: #166345; /* Sötétebb zöld */
+        }
+        .token-display-box .token-info {
+            font-size: 0.9rem;
+            color: #777;
+            word-break: break-all; /* Hosszú token tördelése */
+            margin-top: 10px;
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+    </style>
+{% endblock extra_head %}
+
+{% block content %}
+<div class="token-display-container">
+    <div class="token-display-box">
+        <h2>{{ page_title }}</h2>
+        <p>Köszönjük a regisztrációdat az ESG AutoReport rendszerbe!</p>
+        <p>Fiókod sikeresen létrejött. A teljeskörű használathoz kérjük, add meg vállalati adataidat az alábbi linken keresztül. Az ehhez szükséges linket e-mailben is elküldtük neked (cím: {{ user_email|default:"megadott e-mail címedre" }}).</p>
+        
+        {% if complete_profile_url %}
+            <a href="{{ complete_profile_url }}" class="profile-link">Profil és Vállalati Adatok Megadása</a>
+            <p class="token-info">
+                Ha a gomb nem működik, másold be a következő linket a böngésződ címsorába:<br>
+                <code>{{ complete_profile_url }}</code>
+            </p>
+            {% if profile_setup_token %}
+                 {# A token UUID kiírása opcionális, biztonsági okokból lehet, hogy nem kellene itt direktben, de a kérésed alapján itt van #}
+                <p style="font-size:0.8em; color: #999; margin-top: 15px;">(Referencia token: {{ profile_setup_token }})</p>
+            {% endif %}
+        {% else %}
+            <p>Hiba történt a továbblépési link generálása közben. Kérjük, ellenőrizd az e-mail fiókodat, vagy lépj kapcsolatba velünk.</p>
+        {% endif %}
+        
+        <p style="margin-top: 2rem;">A profilod kitöltése után tudsz majd bejelentkezni és használni a rendszer funkcióit.</p>
+        <hr>
+        <p><a href="{% url 'dashboard:home' %}">Vissza a Főoldalra</a></p>
+    </div>
+</div>
+{% endblock content %}

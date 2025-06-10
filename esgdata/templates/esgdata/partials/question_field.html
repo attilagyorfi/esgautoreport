@@ -1,0 +1,50 @@
+{# esgdata/templates/esgdata/partials/question_field.html #}
+{% load custom_filters %} {# Ha van custom_filters.py a filename filterhez #}
+
+<div class="question-item mb-3">
+    <label for="answer_q_{{ question.pk }}" class="form-label">
+        {{ question.question_text }}
+        {# Kötelezőség jelölése itt is mehetne, ha az ESGDataPoint modellen lenne 'is_required' mező #}
+    </label>
+    
+    {# Input mező a question.response_data_type alapján #}
+    {% if question.response_data_type == 'text' %}
+        <textarea name="answer_q_{{ question.pk }}" id="answer_q_{{ question.pk }}" class="form-control" rows="3">{{ current_value|default_if_none:"" }}</textarea>
+    {% elif question.response_data_type == 'number' %}
+        <input type="number" name="answer_q_{{ question.pk }}" id="answer_q_{{ question.pk }}" class="form-control" step="any" value="{{ current_value|default_if_none:"" }}">
+        {% if question.unit_of_measure %}<small class="form-text text-muted">Mértékegység: {{ question.unit_of_measure }}</small>{% endif %}
+    {% elif question.response_data_type == 'date' %}
+        <input type="date" name="answer_q_{{ question.pk }}" id="answer_q_{{ question.pk }}" class="form-control" value="{{ current_value|date:"Y-m-d"|default_if_none:"" }}">
+    {% elif question.response_data_type == 'boolean' %}
+        <select name="answer_q_{{ question.pk }}" id="answer_q_{{ question.pk }}" class="form-select form-select-sm" style="width: auto;">
+            <option value="" {% if current_value is None or current_value == "" %}selected{% endif %}>Kérjük, válasszon...</option>
+            <option value="True" {% if current_value == "True" or current_value is True %}selected{% endif %}>Igen</option>
+            <option value="False" {% if current_value == "False" or current_value is False %}selected{% endif %}>Nem</option>
+        </select>
+    {% elif question.response_data_type == 'dropdown' and question.choice_option_group %}
+        <select name="answer_q_{{ question.pk }}" id="answer_q_{{ question.pk }}" class="form-select">
+            <option value="">---------</option>
+            {% for option in question.get_choice_options %} {# Feltételezi a get_choice_options metódust a modellen #}
+                <option value="{{ option.text }}" {% if current_value == option.text %}selected{% endif %}>{{ option.text }}</option>
+            {% endfor %}
+        </select>
+    {% elif question.response_data_type == 'file' %}
+        <input type="file" name="answer_q_{{ question.pk }}" id="answer_q_{{ question.pk }}" class="form-control">
+        {% if current_value %} {# current_value itt a FileField objektum #}
+            <small class="form-text text-muted mt-1 d-block">
+                Jelenlegi fájl: 
+                {% if current_value.url %}
+                    <a href="{{ current_value.url }}" target="_blank">{{ current_value.name|filename }}</a>
+                {% else %}
+                    {{ current_value.name|filename }} (Nincs URL)
+                {% endif %}
+                {# TODO: Fájl törlésének lehetősége #}
+            </small>
+        {% endif %}
+    {% else %} {# Alapértelmezett, ha más nincs megadva #}
+         <input type="text" name="answer_q_{{ question.pk }}" id="answer_q_{{ question.pk }}" class="form-control" placeholder="Válasz..." value="{{ current_value|default_if_none:"" }}">
+    {% endif %}
+    
+    {% if question.guidance %}<small class="form-text text-muted mt-1 d-block">Útmutató: {{ question.guidance|safe }}</small>{% endif %}
+    {# Az egyedi státuszválasztók innen el lettek távolítva #}
+</div>

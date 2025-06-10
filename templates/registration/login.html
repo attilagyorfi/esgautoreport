@@ -1,43 +1,57 @@
-{# ESGAutoReport/templates/registration/login.html #}
-<!DOCTYPE html>
-<html lang="hu">
-<head>
-    <meta charset="UTF-8">
-    <title>Bejelentkezés</title>
-    <style>
-        body { font-family: sans-serif; margin: 40px; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; min-height: 80vh; }
-        .login-container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h2 { text-align: center; color: #005B96; margin-bottom: 20px;}
-        form p { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="password"] { width: calc(100% - 20px); padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        .errorlist { color: red; list-style-type: none; padding: 0; margin: 10px 0; font-size: 0.9em; }
-        button[type="submit"] { background-color: #1C8B45; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; width: 100%; }
-        button[type="submit"]:hover { background-color: #17753A; }
-    </style>
-</head>
-<body>
-    <div class="login-container">
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Bejelentkezés - ESG AutoReport{% endblock title %}
+
+
+{% block content %}
+<div class="login-page-container">
+    <div class="login-box">
         <h2>Bejelentkezés</h2>
-        {% if form.errors %}
-            <p class="errorlist">A felhasználónév vagy jelszó helytelen. Próbáld újra!</p>
+
+        {% if form.errors and not form.non_field_errors %}
+            {% if form.non_field_errors %}
+                 <ul class="errorlist">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                 <p class="errorlist">Kérjük, javítsa az alábbi hibá(ka)t.</p>
+            {% endif %}
+        {% endif %}
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
         {% endif %}
 
         <form method="post" action="{% url 'accounts:login' %}">
             {% csrf_token %}
-            <p>
-                <label for="{{ form.username.id_for_label }}">Felhasználónév:</label>
+            <div class="mb-3">
+                <label for="{{ form.username.id_for_label }}" class="form-label">Felhasználónév:</label>
                 {{ form.username }}
-            </p>
-            <p>
-                <label for="{{ form.password.id_for_label }}">Jelszó:</label>
+                {% for error in form.username.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.password.id_for_label }}" class="form-label">Jelszó:</label>
                 {{ form.password }}
-            </p>
+                {% for error in form.password.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
             <input type="hidden" name="next" value="{{ next }}">
-            <p><button type="submit">Bejelentkezés</button></p>
+            <p><button type="submit" class="btn btn-cta">Bejelentkezés</button></p>
         </form>
-        <hr> {# Opcionális elválasztó #}
-        <p style="text-align: center;">Még nincs fiókod? <a href="{% url 'accounts:signup' %}">Regisztrálj itt!</a></p> {# <<< ÚJ LINK #}
+        <hr>
+        <div class="sub-links">
+            <p>Még nincs fiókod? <a href="{% url 'accounts:signup' %}">Regisztrálj itt!</a></p>
+            {# <p><a href="{% url 'password_reset' %}">Elfelejtetted a jelszavad?</a></p> #}
+        </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock content %}

@@ -3,6 +3,60 @@
 
 {% block title %}{{ page_title }}{% endblock title %}
 
+{% block extra_head %}
+    {{ block.super }}
+    <style>
+        /* knowledge_base.html specifikus stílusok */
+        .knowledge-base-content h1 {
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--esg-green);
+            display: inline-block;
+        }
+        .knowledge-base-content p { /* Az oldal bevezető szövege */
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        /* _regulatory_links.html-ben lévő elemek stílusa */
+        .regulatory-links-section { /* A section-öknek a _regulatory_links.html-ben */
+            margin-bottom: 2.5rem; /* Nagyobb térköz a fő linkcsoportok között */
+        }
+        .regulatory-links-section h2 { /* Pl. "Európai Uniós Szabályozás" */
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.3rem;
+            border-bottom: 1px solid #ddd; /* Finom elválasztó */
+        }
+        .list-group-item { /* Bootstrap osztály felülírása/kiegészítése */
+            background-color: var(--white-background);
+            border: 1px solid #e0e0e0;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.5rem; /* Kis térköz a listaelemek között */
+            border-radius: 0.3rem; /* Kerekített sarkok */
+        }
+        .list-group-item a {
+            font-family: var(--font-primary); /* Open Sans a linkeknek */
+            font-weight: 600; /* Kiemeltebb */
+            display: block; /* Teljes szélességben kattintható legyen a szöveg */
+            margin-bottom: 0.25rem; /* Kis térköz a link és a small text között */
+        }
+        /* A base.html-ben lévő a:hover stílus érvényesül */
+
+        .list-group-item small.text-muted { /* A linkek alatti magyarázó szöveg */
+            font-family: var(--font-primary);
+            font-size: 0.9em;
+            color: var(--supporting-gray);
+            opacity: 0.85; /* Kicsit jobban látható */
+            line-height: 1.4;
+        }
+        .knowledge-base-content .text-muted small { /* Az oldal alján lévő felelősségkizáró szöveg */
+            font-size: 0.9rem;
+            color: var(--supporting-gray);
+        }
+    </style>
+{% endblock extra_head %}
+
 {% block content %}
 <div class="container mt-4">
     <h1>{{ page_title }}</h1>

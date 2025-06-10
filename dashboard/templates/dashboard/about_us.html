@@ -1,26 +1,52 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ page_title }}{% endblock title %}
+{% block title %}{{ page_title|default:"Rólunk" }}{% endblock title %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <style>
+        .about-us-content section {
+            margin-bottom: 2rem;
+        }
+        .about-us-content h1 {
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--esg-green);
+            display: inline-block;
+        }
+        .about-us-content h2 {
+            font-size: 1.75rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .about-us-content p {
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        .about-us-content .regulatory-links-section h2 {
+            font-size: 1.5rem;
+        }
+    </style>
+{% endblock extra_head %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Rólunk</h1>
-    <hr>
+<div class="container mt-4 page-content-container about-us-content">
+    <h1>{{ page_title|default:"Rólunk" }}</h1>
 
-    <section id="about-program" class="mb-4">
+    <section id="about-program">
         <h2>Az ESG AutoReport Platformról</h2>
         <p>Az ESG AutoReport egy innovatív, Python alapú webes alkalmazás, amelynek célja, hogy forradalmasítsa és leegyszerűsítse a kis- és középvállalkozások (KKV-k) számára az ESG (Környezeti, Társadalmi és Irányítási) jelentések elkészítésének folyamatát.</p>
         <p>Tisztában vagyunk vele, hogy az ESG megfelelőség és a fenntarthatósági jelentéstétel egyre növekvő jelentőséggel bír az üzleti világban, ugyanakkor komoly adminisztratív terhet róhat a vállalatokra. Platformunkat azért fejlesztettük, hogy ezt a terhet minimalizáljuk, miközben maximalizáljuk az adatpontosságot és segítjük a vállalatokat abban, hogy megfeleljenek a legújabb európai uniós és nemzetközi szabványoknak.</p>
     </section>
 
-    <section id="objective" class="mb-4">
+    <section id="objective">
         <h2>Célkitűzésünk</h2>
         <p>Az ESG AutoReport elsődleges célja, hogy "leegyszerűsítse a kis- és középvállalkozások (KKV-k) számára az ESG jelentések elkészítését, megfelelve az EU-s ESRS 1 (Általános követelmények) & ESRS 2 (Általános közzétételek) szabályozásoknak, valamint a releváns tematikus standardoknak, miközben minimalizálja az adminisztratív terheket és maximalizálja az adatpontosságot".</p>
         <p>Hisszük, hogy a technológia segítségével az ESG jelentéstétel nemcsak kötelezettség, hanem egy lehetőség is lehet a vállalatok számára, hogy átláthatóbbá tegyék működésüket, erősítsék piaci pozíciójukat és hozzájáruljanak egy fenntarthatóbb jövőhöz.</p>
     </section>
 
-    <section id="compliance" class="mb-4">
+    <section id="compliance">
         <h2>Jogszabályi Háttér és Megfelelőség</h2>
         {% include "dashboard/_regulatory_links.html" %}
         <p class="mt-3"><em>Kérjük, vedd figyelembe, hogy ez a platform egy technikai segédeszköz. A jogszabályi megfelelőség biztosítása és a jelentések tartalmának pontossága minden esetben a felhasználó vállalat felelőssége. Javasoljuk, hogy mindig konzultálj szakértőkkel (pl. ESG tanácsadó, könyvvizsgáló) a végleges jelentések benyújtása előtt.</em></p>

@@ -1,0 +1,242 @@
+/* ==========================================================================
+   1. Alapok és Globális Stílusok (Arculati Kézikönyv alapján)
+   ========================================================================== */
+:root {
+    --esg-green: #1C7C54;
+    --supporting-gray: #4A4A4A;
+    --white-background: #FFFFFF;
+    --light-background: #F4F7F6;
+    --accent-yellow: #FFC107;
+    --warning-red: #DC3545;
+
+    --font-primary: 'Open Sans', sans-serif;
+    --font-headings: 'Montserrat', sans-serif;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--light-background);
+    color: var(--supporting-gray);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-size: 16px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-headings);
+    color: var(--esg-green);
+    font-weight: 600;
+}
+
+h1 { font-weight: 700; }
+
+a {
+    color: var(--esg-green);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--accent-yellow);
+    text-decoration: none; /* Alapértelmezetten ne húzzuk alá a linkeket */
+}
+
+/* ==========================================================================
+   2. Fő Komponensek (Header, Footer, Main Container)
+   ========================================================================== */
+.main-container {
+    flex: 1;
+    margin-bottom: 2rem;
+}
+
+footer {
+    background-color: var(--supporting-gray);
+    color: var(--white-background);
+    text-align: center;
+    padding: 1.5em 0;
+}
+
+footer a {
+    color: var(--light-background);
+}
+
+footer a:hover {
+    color: var(--accent-yellow);
+}
+
+/* Navbar */
+.navbar-custom {
+    background-color: var(--esg-green) !important;
+    padding: 1rem 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-custom .navbar-brand,
+.navbar-custom .nav-link {
+    color: var(--white-background) !important;
+    font-family: var(--font-headings);
+    font-weight: 600;
+}
+
+.navbar-custom .navbar-brand {
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+#navbar-logo {
+    height: 45px;
+    width: auto;
+    object-fit: contain;
+}
+
+#navbar-brand-text {
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: var(--white-background) !important;
+    margin-left: 0.5rem;
+}
+
+.navbar-custom .nav-link:hover,
+.navbar-custom .nav-link.active {
+    color: var(--accent-yellow) !important;
+}
+
+.navbar-custom .navbar-toggler {
+    border-color: rgba(255,255,255,0.2);
+}
+
+.navbar-custom .navbar-toggler-icon {
+     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* ==========================================================================
+   3. Gombok és Üzenetek
+   ========================================================================== */
+.btn-cta, button[type="submit"], .btn-primary {
+    background-color: var(--esg-green);
+    color: var(--white-background);
+    border: 1px solid var(--esg-green);
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.3rem;
+    font-family: var(--font-headings);
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+.btn-cta:hover, button[type="submit"]:hover, .btn-primary:hover {
+    background-color: #166345;
+    border-color: #166345;
+    color: var(--white-background);
+}
+.btn-secondary-custom {
+    background-color: var(--white-background);
+    color: var(--supporting-gray);
+    border: 1px solid var(--supporting-gray);
+}
+.btn-secondary-custom:hover {
+    background-color: var(--supporting-gray);
+    color: var(--white-background);
+}
+
+/* Django Messages */
+.messages { list-style-type: none; padding: 0; margin: 1em auto; max-width: 800px; }
+.messages li { padding: 0.8em 1.2em; margin-bottom: 0.75em; border-radius: 5px; border: 1px solid transparent; }
+.messages li.success { background-color: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+.messages li.error { background-color: #ffebee; color: var(--warning-red); border-color: #ef9a9a; }
+.messages li.info { background-color: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+.messages li.warning { background-color: #fffde7; color: #f57f17; border-color: var(--accent-yellow); }
+
+/* ==========================================================================
+   4. Oldalspecifikus Stílusok (Főoldal, Űrlapok stb.)
+   ========================================================================== */
+
+/* Hero Section (home.html) */
+.hero-section {
+    position: relative; width: 100vw; height: 65vh;
+    overflow: hidden; left: 50%; transform: translateX(-50%);
+    padding: 0 !important; margin-bottom: 0 !important;
+}
+#hero-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); z-index: 2; }
+.hero-content {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; text-align: center; z-index: 3;
+    color: var(--white-background); padding: 20px;
+}
+.hero-content h1 {
+    font-size: 3.5rem; color: var(--white-background); text-shadow: 0 2px 8px rgba(0,0,0,0.6); margin-bottom: 0.75em;
+}
+.hero-content p {
+    font-size: 1.5rem; color: var(--white-background); text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    margin-bottom: 1.5em; max-width: 700px;
+}
+
+/* Általános Konténer a Tartalomnak (pl. home.html, about_us.html) */
+.page-content-container {
+    max-width: 1140px;
+    margin-left: auto; margin-right: auto;
+    padding: 0 15px;
+}
+
+/* Kártya Stílusok (home.html) */
+.card {
+    background-color: var(--white-background); border: 1px solid #e0e0e0;
+    border-radius: 0.3rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 1.5rem;
+}
+.card-header {
+    background-color: var(--light-background); color: var(--esg-green);
+    font-family: var(--font-headings); font-weight: 600;
+    padding: 0.8rem 1.2rem; border-bottom: 1px solid #e0e0e0;
+}
+.card-title {
+    font-family: var(--font-headings); color: var(--esg-green) !important;
+    font-weight: 600; margin-bottom: 0.75rem;
+}
+.card-body { padding: 1.2rem; }
+.card-text { font-family: var(--font-primary); color: var(--supporting-gray); line-height: 1.6; }
+.card-link { font-weight: 600; }
+
+.filters-card .card-header {
+    background-color: var(--esg-green); color: var(--white-background);
+}
+
+/* Login & Registration Űrlapok */
+.form-page-box {
+    background-color: var(--white-background); padding: 30px 40px;
+    border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    width: 100%;
+}
+.login-box { max-width: 420px; }
+.register-box { max-width: 600px; }
+
+.form-page-container {
+    display: flex; justify-content: center; align-items: center;
+    min-height: 70vh; padding: 40px 0;
+}
+.form-page-box h2 { text-align: center; margin-bottom: 25px; font-weight: 700; }
+
+/* Kérdőív Kitöltő Oldal (esgdata) */
+.questionnaire-form-container {
+    max-width: 900px; margin: 2rem auto; padding: 2rem;
+    background-color: var(--white-background);
+    border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+.intro-section {
+    margin-bottom: 2rem; padding: 1.5rem;
+    background-color: #e9f5f1; border-left: 5px solid var(--esg-green);
+    border-radius: 0.3rem;
+}
+.question-section-title {
+    font-family: var(--font-headings); color: var(--esg-green);
+    font-size: 1.5rem; font-weight: 600;
+    margin-top: 2rem; margin-bottom: 1rem;
+    padding-bottom: 0.5rem; border-bottom: 1px solid var(--esg-green);
+}
+.question-item {
+    padding: 1rem; border: 1px solid #f0f0f0; border-radius: 0.3rem;
+    margin-bottom: 1rem; background-color: #fdfdfd;
+}

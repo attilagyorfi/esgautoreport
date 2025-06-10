@@ -1,0 +1,16 @@
+{# esgdata/templates/esgdata/report_submission_success.html #}
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} - ESG AutoReport{% endblock title %}
+
+
+{% block content %}
+<div class="success-page-container">
+    <div class="success-box">
+        <h2><i class="fas fa-check-circle" style="color: var(--esg-green);"></i> {{ page_title }}</h2> {# Szükséges FontAwesome vagy más ikoncsomag #}
+        <p>{{ message }}</p>
+        <a href="{% url 'esgdata:create_esg_report_selection' %}" class="btn btn-cta">Újabb adatokat rögzítek</a> {# <<< MÓDOSÍTOTT URL NÉV #}
+        <a href="{% url 'dashboard:home' %}" class="btn btn-secondary-custom ms-2">Vissza a Vezérlőpultra</a>
+    </div>
+</div>
+{% endblock content %}

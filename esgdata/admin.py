@@ -1,6 +1,6 @@
 # esgdata/admin.py
 from django.contrib import admin
-from .models import ESGDataPoint, CompanyDataEntry, ChoiceOption
+from .models import ESGDataPoint, CompanyDataEntry, ChoiceOption # ChoiceOption importálása
 
 @admin.register(ChoiceOption)
 class ChoiceOptionAdmin(admin.ModelAdmin):
@@ -12,34 +12,12 @@ class ChoiceOptionAdmin(admin.ModelAdmin):
 
 @admin.register(ESGDataPoint)
 class ESGDataPointAdmin(admin.ModelAdmin):
-    list_display = (
-        'question_number',
-        'get_question_text_short',
-        'pillar',
-        'response_data_type',
-        'applies_to_questionnaire_type',
-        'is_voluntary',
-        'updated_at'
-    )
-    search_fields = (
-        'question_number',
-        'question_text',
-        'esrs_topic_standard',
-        'esrs_datapoint_definition',
-        'guidance',
-        'applies_to_questionnaire_type'
-    )
-    list_filter = (
-        'pillar',
-        'response_data_type',
-        'is_voluntary',
-        'applies_to_questionnaire_type',
-        'updated_at'
-    )
-    list_editable = ('is_voluntary',)
-    ordering = ('question_number',)
-    list_per_page = 20
-
+    list_display = ('question_number', 'get_question_text_short', 'pillar', 'response_data_type', 'applies_to_questionnaire_type', 'is_voluntary', 'updated_at')
+    search_fields = ('question_number', 'question_text', 'esrs_topic_standard', 'esrs_datapoint_definition', 'guidance', 'applies_to_questionnaire_type')
+    list_filter = ('pillar', 'response_data_type', 'is_voluntary', 'applies_to_questionnaire_type', 'updated_at')
+    list_editable = ('is_voluntary',) 
+    ordering = ('question_number',) # Rendezés a kérdés sorszáma alapján
+    
     fieldsets = (
         (None, {
             'fields': ('question_number', 'question_text', 'is_voluntary', 'applies_to_questionnaire_type')
@@ -56,38 +34,21 @@ class ESGDataPointAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
+    list_per_page = 20
 
     def get_question_text_short(self, obj):
-        return (obj.question_text[:75] + '...') if len(obj.question_text) > 75 else obj.question_text
+        """Rövidített kérdésszöveg a list_display-hez."""
+        if obj.question_text:
+            return (obj.question_text[:75] + '...') if len(obj.question_text) > 75 else obj.question_text
+        return "-"
     get_question_text_short.short_description = 'Kérdés Szövege (rövidítve)'
 
 @admin.register(CompanyDataEntry)
 class CompanyDataEntryAdmin(admin.ModelAdmin):
-    list_display = (
-        'company',
-        'get_data_point_q_number',
-        'get_company_industry',
-        'period_year',
-        'status',
-        'entry_date'
-    )
-    list_filter = (
-        'status',
-        'period_year',
-        'company',
-        'company__industry',
-        'data_point__pillar',
-        'data_point__applies_to_questionnaire_type'
-    )
-    search_fields = (
-        'company__name',
-        'company__industry__name',
-        'company__industry__code',
-        'data_point__question_text',
-        'data_point__question_number',
-        'source_description'
-    )
-    list_select_related = ('company', 'data_point', 'entered_by', 'company__industry')
+    list_display = ('company', 'get_data_point_q_number', 'get_data_point_short_text', 'period_year', 'status', 'entry_date')
+    list_filter = ('status', 'period_year', 'company', 'data_point__pillar', 'data_point__applies_to_questionnaire_type')
+    search_fields = ('company__name', 'data_point__question_text', 'data_point__question_number', 'source_description')
+    list_select_related = ('company', 'data_point', 'entered_by')
     readonly_fields = ('entry_date', 'created_at', 'updated_at', 'entered_by')
     date_hierarchy = 'entry_date'
     list_per_page = 20
@@ -109,20 +70,13 @@ class CompanyDataEntryAdmin(admin.ModelAdmin):
     )
 
     def get_data_point_short_text(self, obj):
-        if obj.data_point:
+        if obj.data_point and obj.data_point.question_text:
             return (obj.data_point.question_text[:50] + '...') if len(obj.data_point.question_text) > 50 else obj.data_point.question_text
         return "-"
-    get_data_point_short_text.short_description = 'ESG Adatpont'
+    get_data_point_short_text.short_description = 'ESG Adatpont (Kérdés)'
 
     def get_data_point_q_number(self, obj):
         if obj.data_point and obj.data_point.question_number:
             return obj.data_point.question_number
         return "-"
     get_data_point_q_number.short_description = 'Adatpont Sorszáma'
-
-    def get_company_industry(self, obj):
-        if obj.company and obj.company.industry:
-            return obj.company.industry.name
-        return "-"
-    get_company_industry.short_description = 'Vállalat Iparága (TEÁOR)'
-    get_company_industry.admin_order_field = 'company__industry__name'
