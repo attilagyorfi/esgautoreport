@@ -1,62 +1,121 @@
-{# esgdata/templates/esgdata/fill_questionnaire.html #}
 {% extends "base.html" %}
-{% load static %} {# Ha kellenek static fájlok vagy custom filterek #}
-{% load custom_filters %} {# Ha használod a get_item vagy filename filtert #}
+{% load static %}
+{% load custom_filters %}
 
 {% block title %}{{ page_title|default:"ESG Kérdőív Kitöltése" }}{% endblock title %}
 
+{% block extra_head %}
+    {{ block.super }}
+    <style>
+        .form-page-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: var(--white-background);
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .form-page-container h1 {
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        .selection-summary {
+            background-color: #f8f9fa;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.25rem;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            text-align: center;
+        }
+        .selection-summary strong {
+            color: var(--esg-green);
+        }
+        .question-section-title {
+            font-family: var(--font-headings);
+            color: var(--esg-green);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--esg-green);
+        }
+        .question-item {
+            padding: 1rem;
+            border: 1px solid #f0f0f0;
+            border-radius: 0.3rem;
+            margin-bottom: 1rem;
+            background-color: #fdfdfd;
+        }
+        .question-item .form-label {
+            font-weight: 600; /* Kiemeltebb kérdésszöveg */
+            color: var(--supporting-gray);
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .question-item .form-text {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 0.3rem;
+            display: block;
+        }
+    </style>
+{% endblock extra_head %}
 
 {% block content %}
 <div class="form-page-container">
     <h1>{{ page_title }}</h1>
 
     <div class="selection-summary">
-        Kiválasztott vállalat: <strong>{{ selected_company.name }}</strong> |
+        Vállalat: <strong>{{ selected_company.name }}</strong> |
         Év: <strong>{{ selected_year }}</strong> |
         Témakör: <strong>{{ selected_topic_display }}</strong>
-        <a href="{% url 'esgdata:create_esg_report_selection' %}" class="ms-3 badge bg-secondary text-white text-decoration-none">Másik témakör/vállalat választása</a>
+        <a href="{% url 'esgdata:create_esg_report_selection' %}" class="ms-3 badge bg-secondary text-white text-decoration-none">Vissza a kiválasztáshoz</a>
     </div>
 
     <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
-        <div class="questions-section">
-            {% if selected_topic_key == 'datasheet' %}
-                {% if sajat_jelento_adatok %}
-                    <h3 class="question-section-title">Az ESG beszámolót és annak mellékletét képező kérdőívet benyújtó adatai</h3>
-                    {% for esg_question in sajat_jelento_adatok %}
-                        {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
-                    {% endfor %}
-                {% endif %}
-                {% if beszallito_kitolto_adatok %}
-                    <h3 class="question-section-title">ESG kérdőívet kitöltő adatai</h3>
-                    {% for esg_question in beszallito_kitolto_adatok %}
-                        {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
-                    {% endfor %}
-                {% endif %}
-                {% if beszallito_kero_adatok %}
-                    <h3 class="question-section-title">ESG Kérdőív kitöltését kérő vállalkozás adatai</h3>
-                    {% for esg_question in beszallito_kero_adatok %}
-                        {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
-                    {% endfor %}
-                {% endif %}
-            {% elif other_topic_questions %}
-                 <h3 class="question-section-title">{{ selected_topic_display }} Kérdései</h3>
-                 {% for esg_question in other_topic_questions %}
-                    {% include "esgdata/partials/question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
-                 {% endfor %}
-            {% else %}
-                {% if selected_topic_key %}
-                <p class="text-muted mt-3">Nincsenek kérdések ehhez a kiválasztott témakörhöz ("{{ selected_topic_display }}"). Kérjük, ellenőrizze, hogy az adatimportálás sikeres volt-e.</p>
-                {% else %}
-                     <p class="text-muted mt-3">Nincs kiválasztott témakör. Kérjük, <a href="{% url 'esgdata:create_esg_report_selection' %}">válasszon egyet</a>.</p>
-                {% endif %}
-            {% endif %}
 
-            {% if sajat_jelento_adatok or beszallito_kitolto_adatok or beszallito_kero_adatok or other_topic_questions %}
-                <hr class="my-4">
-                <button type="submit" class="btn btn-cta btn-lg" name="save_answers">Válaszok Mentése</button>
-            {% endif %}
-        </div>
+        {% if questions_loaded %}
+            <div class="questions-section">
+                
+                {# Adatlap szekciók renderelése #}
+                {% if selected_topic_key == 'datasheet' %}
+                    {% if sajat_jelento_adatok %}
+                        <h3 class="question-section-title">Az ESG beszámolót és annak mellékletét képező kérdőívet benyújtó adatai</h3>
+                        {% for esg_question in sajat_jelento_adatok %}
+                            {% include "esgdata/partials/_question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                        {% endfor %}
+                    {% endif %}
+                    {% if beszallito_kitolto_adatok %}
+                        <h3 class="question-section-title">ESG kérdőívet kitöltő adatai</h3>
+                        {% for esg_question in beszallito_kitolto_adatok %}
+                            {% include "esgdata/partials/_question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                        {% endfor %}
+                    {% endif %}
+                    {% if beszallito_kero_adatok %}
+                        <h3 class="question-section-title">ESG Kérdőív kitöltését kérő vállalkozás adatai</h3>
+                        {% for esg_question in beszallito_kero_adatok %}
+                            {% include "esgdata/partials/_question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                        {% endfor %}
+                    {% endif %}
+                
+                {# Egyéb témakörök (E, S, G, ÜHG) renderelése #}
+                {% elif other_topic_questions %}
+                     {% for esg_question in other_topic_questions %}
+                        {% include "esgdata/partials/_question_field.html" with question=esg_question current_value=existing_answers|get_item:esg_question.pk %}
+                     {% endfor %}
+                {% else %}
+                    <p class="text-muted mt-3">Nincsenek kérdések ehhez a kiválasztott témakörhöz.</p>
+                {% endif %}
+                
+                {# Mentés gomb, ha vannak kérdések #}
+                {% if sajat_jelento_adatok or beszallito_kitolto_adatok or beszallito_kero_adatok or other_topic_questions %}
+                    <hr class="my-4">
+                    <button type="submit" class="btn btn-cta btn-lg" name="save_answers">Válaszok Mentése</button>
+                {% endif %}
+            </div>
+        {% endif %}
     </form>
 </div>
 {% endblock content %}

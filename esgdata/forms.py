@@ -1,75 +1,51 @@
 # esgdata/forms.py
 from django import forms
-from .models import CompanyDataEntry, ESGDataPoint
 from companies.models import CompanyProfile
-import datetime  # Szükséges az aktuális évhez
+import datetime
+from django.utils.translation import gettext_lazy as _
 
-# 1. Régi CompanyDataEntryForm (ha a régi adatbeviteli nézet még használja)
-class CompanyDataEntryForm(forms.ModelForm):
-    class Meta:
-        model = CompanyDataEntry
-        fields = [
-            'company',
-            'data_point',
-            'period_year',
-            'period_month',
-            'value_numeric',
-            'value_text',
-            'value_date',
-            'value_file',
-            'source_description',
-            'status',
-        ]
-        widgets = {
-            'period_year': forms.NumberInput(attrs={'placeholder': 'ÉÉÉÉ'}),
-            'period_month': forms.NumberInput(attrs={'placeholder': 'HH (1-12)'}),
-            'value_date': forms.DateInput(attrs={'type': 'date'}),
-            'source_description': forms.Textarea(attrs={'rows': 3}),
-        }
-        labels = {
-            'company': 'Vállalat',
-            'data_point': 'ESG Adatpont',
-            'period_year': 'Jelentési Év',
-            'period_month': 'Jelentési Hónap (opcionális)',
-            'value_numeric': 'Számszerű Érték',
-            'value_text': 'Szöveges Érték',
-            'value_date': 'Dátum Érték',
-            'value_file': 'Fájl Érték',
-            'source_description': 'Adatforrás Leírása',
-            'status': 'Státusz',
-        }
-        help_texts = {
-            'period_month': 'Havi vagy negyedéves adatokhoz (1-12). Hagyd üresen éves adathoz.',
-        }
+# A jelentéstípusok, amelyeket a felhasználó választhat.
+# A kulcsok (pl. 'sztfh_mikrovall_hu_egt_ch') fognak összekapcsolódni
+# az adatbázisban a kérdésekkel.
+QUESTIONNAIRE_TYPE_CHOICES = [
+    ('', '--------- Kérjük, válasszon jelentéstípust ---------'),
+    ('sztfh_nagyvall_hu_egt_ch', _('Nagyvállalkozás - EGT és Svájc')),
+    ('sztfh_nagyvall_oecd_non_hu', _('Nagyvállalkozás - OECD')),
+    ('sztfh_nagyvall_other', _('Nagyvállalkozás - Egyéb')),
+    ('sztfh_kozepvall_hu_egt_ch', _('Középvállalkozás - EGT és Svájc')),
+    ('sztfh_kozepvall_oecd_non_hu', _('Középvállalkozás - OECD')),
+    ('sztfh_kozepvall_other', _('Középvállalkozás - Egyéb')),
+    ('sztfh_kisvall_hu_egt_ch', _('Kisvállalkozás - EGT és Svájc')),
+    ('sztfh_kisvall_oecd_non_hu', _('Kisvállalkozás - OECD')),
+    ('sztfh_kisvall_other', _('Kisvállalkozás - Egyéb')),
+    ('sztfh_mikrovall_hu_egt_ch', _('Mikrovállalkozás - EGT és Svájc')),
+    ('sztfh_mikrovall_oecd_non_hu', _('Mikrovállalkozás - OECD')),
+    ('sztfh_mikrovall_other', _('Mikrovállalkozás - Egyéb')),
+]
 
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)
-        super().__init__(*args, **kwargs)
-        # Itt lehet user-alapú szűrés vagy egyedi logika, ha szükséges
-
-# 2. Új ESGReportCreationInitialForm (az "ESG Jelentés Készítése" oldalhoz)
 class ESGReportCreationInitialForm(forms.Form):
     company = forms.ModelChoiceField(
         queryset=CompanyProfile.objects.all().order_by('name'),
         label="Vállalat",
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.Select(attrs={'class': 'form-select mb-3'})
     )
-
-    # Jelentési Év - Legördülő menü
+    
+    # Jelentési év legördülő menü
     current_year = datetime.date.today().year
-    YEAR_CHOICES = [(year, str(year)) for year in range(current_year - 10, current_year + 1)]
-
+    YEAR_CHOICES = sorted([(year, str(year)) for year in range(current_year - 5, current_year + 1)], key=lambda x: x[0], reverse=True)
+    
     period_year = forms.ChoiceField(
         label="Jelentési Év",
         choices=YEAR_CHOICES,
         initial=current_year,
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.Select(attrs={'class': 'form-select mb-3'})
     )
-
-    pillar = forms.ChoiceField(
-        choices=ESGDataPoint.PILLAR_CHOICES,
-        label="Jelentésrész Kiválasztása",
-        widget=forms.Select(attrs={'class': 'form-select'})
+    
+    # Az új, egyesített legördülő menü a jelentéstípusokhoz
+    report_type = forms.ChoiceField(
+        choices=QUESTIONNAIRE_TYPE_CHOICES,
+        label="Jelentés Kiválasztása",
+        widget=forms.Select(attrs={'class': 'form-select mb-3'})
     )
 
     def __init__(self, *args, **kwargs):
@@ -79,6 +55,5 @@ class ESGReportCreationInitialForm(forms.Form):
             if hasattr(self.user, 'profile') and self.user.profile.company:
                 self.fields['company'].initial = self.user.profile.company
                 self.fields['company'].queryset = CompanyProfile.objects.filter(pk=self.user.profile.company.pk)
-        # Csökkenő sorrendben jelenjenek meg az évek (legfrissebb elöl)
-        self.fields['period_year'].choices = sorted(self.YEAR_CHOICES, key=lambda x: x[0], reverse=True)
+        
         self.fields['period_year'].initial = self.current_year

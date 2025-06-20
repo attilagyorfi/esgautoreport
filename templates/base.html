@@ -114,7 +114,7 @@
     <ul class="list-inline">
          <li class="list-inline-item"><a href="{% url 'dashboard:home' %}" class="text-white-50">Vezérlőpult</a></li>
          <li class="list-inline-item"><a href="{% url 'dashboard:about_us' %}" class="text-white-50">Rólunk</a></li>
-         <li class="list-inline-item"><a href="{% url 'esgdata:create_esg_report_selection' %}" class="text-white-50">ESG Jelentés Készítése</a></li>
+         <li><a class="dropdown-item {% if request.resolver_match.view_name == 'esgdata:create_report_selection' %}active{% endif %}" href="{% url 'esgdata:create_report_selection' %}">ESG Jelentés Készítése</a></li>
          <li class="list-inline-item"><a href="{% url 'dashboard:knowledge_base' %}" class="text-white-50">Tudástár</a></li>
         <li class="list-inline-item"><a href="{% url 'dashboard:contact' %}" class="text-white-50">Kapcsolat</a></li>
     </ul>

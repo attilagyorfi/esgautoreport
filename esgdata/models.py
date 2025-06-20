@@ -193,9 +193,10 @@ class CompanyDataEntry(models.Model):
 
     def __str__(self):
         company_name = self.company.name if self.company else "Ismeretlen cég"
-        # Módosítsd 'self.data_point.name'-ről 'self.data_point.question_text'-re
+        # JAVÍTÁS: .name helyett .question_text
         datapoint_name = self.data_point.question_text if self.data_point else "Ismeretlen adatpont"
-        return f"Adatbevitel: {company_name} - {datapoint_name[:50]}..." # Levágjuk, hogy ne legyen túl hosszú
+        # Levágjuk a kérdést, hogy ne legyen túl hosszú az admin felületen
+        return f"Adatbevitel: {company_name} - {datapoint_name[:50]}..."
 
     class Meta:
         verbose_name = "Vállalati ESG Adatbevitel"
