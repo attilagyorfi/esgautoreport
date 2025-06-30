@@ -1,8 +1,8 @@
+{# dashboard/templates/dashboard/home.html #}
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ page_title|default:"Vezérlőpult" }} - ESG AutoReport{% endblock title %}
-
+{% block title %}Vezérlőpult - ESG AutoReport{% endblock title %}
 
 {% block content %}
 <div class="hero-section">
@@ -13,13 +13,11 @@
     <div class="hero-overlay"></div>
     <div class="hero-content">
         <h1>ESG AutoReport</h1>
-        <p>{{ jelmondat|default:"Automatizált ESG jelentések – gyorsabban, pontosabban, egyszerűbben" }}</p>
-        {# <a href="#" class="btn btn-cta btn-cta-hero">Ismerd meg jobban!</a> #}
+        <p>Automatizált ESG jelentések – gyorsabban, pontosabban, egyszerűbben</p>
     </div>
 </div>
 
 <div class="page-content-container mt-4">
-    <!-- Statisztikai kártyák -->
     <div class="row">
         <div class="col-md-4 mb-3">
             <div class="card h-100 info-card">
@@ -38,20 +36,21 @@
                 <div class="card-body">
                     <h5 class="card-title">Fontos Értesítések</h5>
                     <p class="card-text">Hamarosan itt jelennek meg az aktuális értesítéseid és emlékeztetőid.</p>
-                    <a href="#" class="btn btn-cta mt-auto">Összes értesítés</a>
                 </div>
             </div>
         </div>
         <div class="col-md-4 mb-3">
-        <div class="card h-100 info-card">
-            <div class="card-body"> {# A d-flex flex-column innen kivehető, ha már nincs alulra igazítandó gomb #}
-                <h5 class="card-title">Gyors Akciók</h5>
-                <ul> {# Az mb-auto osztályt is eltávolítottam #}
-                    <li><a href="{% url 'esgdata:create_esg_report_selection' %}" class="card-link">ESG Jelentés Készítése</a></li>
-                    <li><a href="#" class="card-link">Korábbi Jelentések (hamarosan)</a></li>
-                </ul>
+            <div class="card h-100 info-card">
+                <div class="card-body">
+                    <h5 class="card-title">Gyors Akciók</h5>
+                    <ul>
+                        {# JAVÍTOTT SOR #}
+                        <li><a href="{% url 'esgdata:create_report_selection' %}" class="card-link">ESG Jelentés Készítése</a></li>
+                        <li><a href="#" class="card-link">Korábbi Jelentések (hamarosan)</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
-    </div>
+</div>
 {% endblock content %}

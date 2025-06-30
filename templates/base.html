@@ -1,4 +1,4 @@
-{# ESGAutoReport/templates/base.html #}
+{# templates/base.html #}
 {% load static %}
 <!DOCTYPE html>
 <html lang="hu">
@@ -6,25 +6,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ESG AutoReport{% endblock title %}</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
-
-    <!-- Google Fonts importálása -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@300;400&display=swap" rel="stylesheet">
-
- {# ÚJ: A központi CSS fájl betöltése #}
     <link rel="stylesheet" href="{% static 'css/global.css' %}">
+    {% block extra_head %}{% endblock extra_head %}
 </head>
 <body>
-
     <header>
         <nav class="navbar navbar-expand-lg navbar-custom">
             <div class="container-fluid">
-                <!-- MÓDOSÍTOTT NAVBAR-BRAND A LOGÓVAL -->
-                <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard:home' %}">
-                    <span id="navbar-brand-text" class="fw-bold">ESGAutoReport</span>
+                <a class="navbar-brand" href="{% url 'dashboard:home' %}">
+                    <img src="{% static 'images/logo_white.png' %}" alt="ESGAutoReport Logó" id="navbar-logo">
+                    <span id="navbar-brand-text">ESGAutoReport</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -44,20 +39,18 @@
                             <ul class="dropdown-menu" aria-labelledby="dataManagementDropdown">
                                 <li><a class="dropdown-item {% if request.resolver_match.view_name == 'dashboard:data_management_overview' %}active{% endif %}" href="{% url 'dashboard:data_management_overview' %}">Áttekintés és Leírás</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item {% if request.resolver_match.view_name == 'esgdata:create_esg_report_selection' %}active{% endif %}" href="{% url 'esgdata:create_esg_report_selection' %}">ESG Jelentés Készítése</a></li>
+                                {# JAVÍTOTT SOR #}
+                                <li><a class="dropdown-item {% if request.resolver_match.view_name == 'esgdata:create_report_selection' %}active{% endif %}" href="{% url 'esgdata:create_report_selection' %}">ESG Jelentés Készítése</a></li>
                                 <li><a class="dropdown-item" href="#">Korábbi Jelentések (hamarosan)</a></li>
                             </ul>
                         </li>
-
                          <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.view_name == 'dashboard:knowledge_base' %}active{% endif %}" href="{% url 'dashboard:knowledge_base' %}">Tudástár</a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.view_name == 'dashboard:contact' %}active{% endif %}" href="{% url 'dashboard:contact' %}">Kapcsolat</a>
-                    </li>
-                </ul>
-    
+                            <a class="nav-link {% if request.resolver_match.view_name == 'dashboard:knowledge_base' %}active{% endif %}" href="{% url 'dashboard:knowledge_base' %}">Tudástár</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.view_name == 'dashboard:contact' %}active{% endif %}" href="{% url 'dashboard:contact' %}">Kapcsolat</a>
+                        </li>
+                    </ul>
                     <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         {% if user.is_authenticated %}
                             <li class="nav-item dropdown">
@@ -66,10 +59,11 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
                                     <li><a class="dropdown-item" href="#">Profilom (hamarosan)</a></li>
+                                    {% if user.is_superuser %}
                                     <li><a class="dropdown-item" href="{% url 'admin:index' %}">Adminisztráció</a></li>
+                                    {% endif %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <form method="post" action="{% url 'accounts:logout' %}" id="logoutFormNav" style="display: none;">{% csrf_token %}</form>
+                                    <li><form method="post" action="{% url 'accounts:logout' %}" id="logoutFormNav" style="display: none;">{% csrf_token %}</form>
                                         <a class="dropdown-item" href="#" onclick="document.getElementById('logoutFormNav').submit(); return false;">Kijelentkezés</a>
                                     </li>
                                 </ul>
@@ -79,7 +73,7 @@
                                 <a class="nav-link {% if request.resolver_match.view_name == 'accounts:login' %}active{% endif %}" href="{% url 'accounts:login' %}">Bejelentkezés</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {% if request.resolver_match.view_name == 'accounts:signup' or request.resolver_match.view_name == 'accounts:register_with_token' %}active{% endif %}" href="{% url 'accounts:signup' %}">Regisztráció</a>
+                                <a class="nav-link {% if request.resolver_match.view_name == 'accounts:signup' %}active{% endif %}" href="{% url 'accounts:signup' %}">Regisztráció</a>
                             </li>
                         {% endif %}
                     </ul>
@@ -111,18 +105,18 @@
     <footer class="mt-auto py-3">
         <div class="container text-center">
             <p class="mb-2">&copy; {% now "Y" %} ESGAutoReport. Minden jog fenntartva.</p>
-    <ul class="list-inline">
-         <li class="list-inline-item"><a href="{% url 'dashboard:home' %}" class="text-white-50">Vezérlőpult</a></li>
-         <li class="list-inline-item"><a href="{% url 'dashboard:about_us' %}" class="text-white-50">Rólunk</a></li>
-         <li><a class="dropdown-item {% if request.resolver_match.view_name == 'esgdata:create_report_selection' %}active{% endif %}" href="{% url 'esgdata:create_report_selection' %}">ESG Jelentés Készítése</a></li>
-         <li class="list-inline-item"><a href="{% url 'dashboard:knowledge_base' %}" class="text-white-50">Tudástár</a></li>
-        <li class="list-inline-item"><a href="{% url 'dashboard:contact' %}" class="text-white-50">Kapcsolat</a></li>
-    </ul>
+            <ul class="list-inline">
+                <li class="list-inline-item"><a href="{% url 'dashboard:home' %}" class="text-white-50">Főoldal</a></li>
+                <li class="list-inline-item"><a href="{% url 'dashboard:about_us' %}" class="text-white-50">Rólunk</a></li>
+                {# JAVÍTOTT SOR #}
+                <li class="list-inline-item"><a href="{% url 'esgdata:create_report_selection' %}" class="text-white-50">ESG Jelentés Készítése</a></li>
+                <li class="list-inline-item"><a href="{% url 'dashboard:knowledge_base' %}" class="text-white-50">Tudástár</a></li>
+                <li class="list-inline-item"><a href="{% url 'dashboard:contact' %}" class="text-white-50">Kapcsolat</a></li>
+            </ul>
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock extra_js %}
 </body>
 </html>

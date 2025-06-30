@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>ESG Jelentés - {{ company.name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: sans-serif;
+            color: #333;
+        }
+        h1, h2 {
+            color: #0056b3;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            word-wrap: break-word;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .header, .footer {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ESG Fenntarthatósági Jelentés</h1>
+        <h2>{{ company.name }}</h2>
+    </div>
+
+    <h3>Jelentési Időszak: {{ reporting_period }}</h3>
+    <p>Dokumentum generálva: {{ generation_date|date:"Y. F d." }}</p>
+    
+    <h2>Adatpontok</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Pillér</th>
+                <th>Azonosító</th>
+                <th>Kérdés</th>
+                <th>Válasz</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in data_entries %}
+            <tr>
+                <td>{{ entry.data_point.get_pillar_display }}</td>
+                <td>{{ entry.data_point.datapoint_id }}</td>
+                <td>{{ entry.data_point.question_text }}</td>
+                <td>
+                    {% if entry.data_point.response_data_type == 'CHOICE' and entry.choice_value %}
+                        {{ entry.choice_value.option_text }}
+                    {% elif entry.data_point.response_data_type == 'BOOLEAN' %}
+                        {% if entry.boolean_value %}Igen{% else %}Nem{% endif %}
+                    {% else %}
+                        {{ entry.text_value|default_if_none:"" }}
+                        {{ entry.number_value|default_if_none:"" }}
+                        {{ entry.date_value|date:"Y-m-d"|default_if_none:"" }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">Nincsenek rögzített adatok ebben az időszakban.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Ez a dokumentum az ESGAutoReport rendszerrel készült.</p>
+    </div>
+</body>
+</html>

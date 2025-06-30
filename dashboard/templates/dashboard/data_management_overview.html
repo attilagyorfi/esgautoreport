@@ -46,53 +46,19 @@
 <div class="container mt-4 page-content-container overview-content">
     <h1>{{ page_title }}</h1>
     <p class="lead">Ismerje meg az ESG adatszolgáltatás alapjait és a platformon elérhető funkciókat, amelyek segítik a jelentéstételi kötelezettségek teljesítését.</p>
-    
     <hr>
-
     <section id="why-esg">
         <h2>Miért szükséges az ESG adatszolgáltatás?</h2>
-        <p>
-            Az Európai Unió és a hazai szabályozás (pl. a Vállalati Fenntarthatósági Jelentéstételi Irányelv - CSRD) egyre több vállalat számára teszi kötelezővé a fenntarthatósági információk közzétételét. Ezen túlmenően az üzleti partnerek, befektetők és pénzügyi intézmények is egyre gyakrabban várják el az ESG adatok transzparens bemutatását a kockázatok felméréséhez és a felelős üzleti döntésekhez.
-        </p>
-        <blockquote>
-            Az ESGAutoReport platform célja, hogy leegyszerűsítse és automatizálja ezt az adatgyűjtési és jelentéstételi folyamatot.
-        </blockquote>
+        <p>Az Európai Unió és a hazai szabályozás (pl. a Vállalati Fenntarthatósági Jelentéstételi Irányelv - CSRD) egyre több vállalat számára teszi kötelezővé a fenntarthatósági információk közzétételét. Ezen túlmenően az üzleti partnerek, befektetők és pénzügyi intézmények is egyre gyakrabban várják el az ESG adatok transzparens bemutatását a kockázatok felméréséhez és a felelős üzleti döntésekhez.</p>
+        <blockquote>Az ESGAutoReport platform célja, hogy leegyszerűsítse és automatizálja ezt az adatgyűjtési és jelentéstételi folyamatot.</blockquote>
     </section>
-
-    <section id="questionnaire-purpose">
-        <h2>Mi a platformon kitöltendő kérdőívek célja?</h2>
-        <p>A platformon elérhető kérdőívek és adatlapok célja, hogy:</p>
-        <ul>
-            <li>elősegítsék a vonatkozó fenntarthatósági szabályozásoknak való megfelelést,</li>
-            <li>támogassák az ESG információk strukturált és egységes gyűjtését,</li>
-            <li>és előmozdítsák a fenntartható működési és üzleti gyakorlatok fejlődését.</li>
-        </ul>
-    </section>
-
-    <section id="who-is-affected">
-        <h2>Milyen vállalatokra vonatkozik a kitöltési kötelezettség?</h2>
-        <p>
-            Bár a jogszabályi kötelezettség elsősorban a nagyobb vállalatokat érinti, az ellátási láncokon keresztül a fenntarthatósági adatszolgáltatás egyre több kis- és középvállalkozás számára is fontossá válik. Platformunk elsősorban a <strong>belföldi székhelyű, illetve a belföldi telephellyel rendelkező külföldi vállalkozásoknak</strong> nyújt segítséget az ESG adatszolgáltatási feladatok teljesítésében.
-        </p>
-    </section>
-
-    <section id="when-to-report">
-        <h2>Mikortól és milyen gyakran kell adatot szolgáltatni?</h2>
-        <p>
-            A jelentéstételi kötelezettség bevezetésének ütemezése és köre a vállalat méretétől és tevékenységi körétől függ. A CSRD irányelv hatálya alá tartozó vállalatok számára a kötelezettség fokozatosan, jellemzően 2025-től kezdődően lép életbe.
-        </p>
-        <p>
-            Az ESG adatokat és a kapcsolódó jelentést általában <strong>évente, az üzleti év lezárását követően szükséges frissíteni.</strong> Ezen felül soron kívüli frissítés válhat szükségessé, ha a vállalat működésében a fenntarthatósági kockázatokat érintő lényeges változás következik be.
-        </p>
-    </section>
-    
     <section id="how-to-fill">
         <h2>Hogyan kezdjem el a kitöltést?</h2>
-        <p>A folyamat egyszerű. Lépj az "Adatkezelés" menüpont "ESG Jelentés Készítése" almenüjére, ahol a megfelelő Témakör kiválasztása után megkezdheted a releváns kérdőív kitöltését.</p>
+        <p>A folyamat egyszerű. Lépj az "Adatkezelés" menüpont "ESG Jelentés Készítése" almenüjére, ahol a megfelelő Jelentéstípus kiválasztása után megkezdheted a releváns kérdőív kitöltését.</p>
         <div class="text-center mt-4">
-             <a href="{% url 'esgdata:create_esg_report_selection' %}" class="btn btn-cta btn-lg">Jelentéskészítés Indítása</a>
+             {# JAVÍTOTT SOR #}
+             <a href="{% url 'esgdata:create_report_selection' %}" class="btn btn-cta btn-lg">Jelentéskészítés Indítása</a>
         </div>
     </section>
-
 </div>
 {% endblock content %}
