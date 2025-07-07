@@ -1,82 +1,37 @@
 # esgdata/admin.py
 from django.contrib import admin
-from .models import ESGDataPoint, CompanyDataEntry, ChoiceOption # ChoiceOption importálása
+from .models import Questionnaire, EsgDataPoint, CompanyDataEntry, ChoiceOption, Report
+
+@admin.register(Questionnaire)
+class QuestionnaireAdmin(admin.ModelAdmin):
+    list_display = ('name', 'company_size', 'region', 'is_active')
+    list_filter = ('company_size', 'region', 'is_active')
+    search_fields = ('name',)
+
+@admin.register(EsgDataPoint)
+class EsgDataPointAdmin(admin.ModelAdmin):
+    list_display = ('question_id', 'text', 'pillar', 'answer_type', 'is_active')
+    list_filter = ('pillar', 'answer_type', 'is_active', 'questionnaires')
+    search_fields = ('question_id', 'text')
+    filter_horizontal = ('questionnaires',)
 
 @admin.register(ChoiceOption)
 class ChoiceOptionAdmin(admin.ModelAdmin):
-    list_display = ('text', 'group_identifier', 'id', 'updated_at')
-    search_fields = ('text', 'group_identifier')
-    list_filter = ('group_identifier',)
-    ordering = ('group_identifier', 'text')
-    list_per_page = 25
+    list_display = ('id', 'text')
+    search_fields = ('text',)
 
-@admin.register(ESGDataPoint)
-class ESGDataPointAdmin(admin.ModelAdmin):
-    list_display = ('question_number', 'get_question_text_short', 'pillar', 'response_data_type', 'applies_to_questionnaire_type', 'is_voluntary', 'updated_at')
-    search_fields = ('question_number', 'question_text', 'esrs_topic_standard', 'esrs_datapoint_definition', 'guidance', 'applies_to_questionnaire_type')
-    list_filter = ('pillar', 'response_data_type', 'is_voluntary', 'applies_to_questionnaire_type', 'updated_at')
-    list_editable = ('is_voluntary',) 
-    ordering = ('question_number',) # Rendezés a kérdés sorszáma alapján
-    
-    fieldsets = (
-        (None, {
-            'fields': ('question_number', 'question_text', 'is_voluntary', 'applies_to_questionnaire_type')
-        }),
-        ('Besorolás és ESRS Hivatkozások', {
-            'fields': ('pillar', 'esrs_topic_standard', 'esrs_datapoint_definition')
-        }),
-        ('Válasz Formátuma és Útmutató', {
-            'fields': ('response_data_type', 'unit_of_measure', 'choice_option_group', 'guidance')
-        }),
-        ('Időbélyegek (Rendszer)', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',),
-        }),
-    )
-    readonly_fields = ('created_at', 'updated_at')
-    list_per_page = 20
-
-    def get_question_text_short(self, obj):
-        """Rövidített kérdésszöveg a list_display-hez."""
-        if obj.question_text:
-            return (obj.question_text[:75] + '...') if len(obj.question_text) > 75 else obj.question_text
-        return "-"
-    get_question_text_short.short_description = 'Kérdés Szövege (rövidítve)'
+@admin.register(Report)
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ('company', 'report_type', 'period_year', 'created_by', 'created_at')
+    list_filter = ('company', 'period_year', 'report_type')
+    search_fields = ('company__name', 'report_type__name')
+    autocomplete_fields = ('company', 'report_type', 'created_by')
 
 @admin.register(CompanyDataEntry)
 class CompanyDataEntryAdmin(admin.ModelAdmin):
-    list_display = ('company', 'get_data_point_q_number', 'get_data_point_short_text', 'period_year', 'status', 'entry_date')
-    list_filter = ('status', 'period_year', 'company', 'data_point__pillar', 'data_point__applies_to_questionnaire_type')
-    search_fields = ('company__name', 'data_point__question_text', 'data_point__question_number', 'source_description')
-    list_select_related = ('company', 'data_point', 'entered_by')
-    readonly_fields = ('entry_date', 'created_at', 'updated_at', 'entered_by')
-    date_hierarchy = 'entry_date'
-    list_per_page = 20
-
-    fieldsets = (
-        (None, {
-            'fields': ('company', 'data_point', ('period_year', 'period_month'))
-        }),
-        ('Megadott Érték', {
-            'fields': ('value_numeric', 'value_text', 'value_date', 'value_file')
-        }),
-        ('Metaadatok', {
-            'fields': ('source_description', 'status', 'entered_by')
-        }),
-        ('Időbélyegek (Rendszer)', {
-            'fields': ('entry_date', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
-
-    def get_data_point_short_text(self, obj):
-        if obj.data_point and obj.data_point.question_text:
-            return (obj.data_point.question_text[:50] + '...') if len(obj.data_point.question_text) > 50 else obj.data_point.question_text
-        return "-"
-    get_data_point_short_text.short_description = 'ESG Adatpont (Kérdés)'
-
-    def get_data_point_q_number(self, obj):
-        if obj.data_point and obj.data_point.question_number:
-            return obj.data_point.question_number
-        return "-"
-    get_data_point_q_number.short_description = 'Adatpont Sorszáma'
+    # JAVÍTVA: A 'company' hivatkozásokat 'report'-ra cseréltük
+    list_display = ('report', 'data_point', 'choice_option', 'text_value', 'date_recorded')
+    list_filter = ('report__company', 'report__period_year', 'data_point__pillar') # Szűrés a reporton keresztül
+    search_fields = ('report__company__name', 'data_point__text')
+    # Az autocomplete mezőt is javítjuk
+    autocomplete_fields = ('report', 'data_point', 'choice_option')

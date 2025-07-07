@@ -1,16 +1,13 @@
 # dashboard/urls.py
 from django.urls import path
-from . import views # Importáljuk a nézeteket az aktuális appból
+from . import views
 
-app_name = 'dashboard' # Ajánlott az app nevének megadása névtérként
+app_name = 'dashboard'
 
 urlpatterns = [
-    path('', views.home_view, name='home'), # Az app gyökere (pl. /dashboard/) erre a nézetre mutat
-    path('rolunk/', views.about_us_view, name='about_us'),
-    path('kapcsolat/', views.contact_view, name='contact'),
-    path('tudastar/', views.knowledge_base_view, name='knowledge_base'),
-    path('company-setup/', views.company_setup_view, name='company_setup'),
-    path('data-management-overview/', views.data_management_overview_view, name='data_management_overview'),
-
-
+    path('', views.home, name='home'),
+    path('profile/', views.profile_view, name='profile'),
+    path('rolunk/', views.about_us, name='about_us'),
+    path('tudastar/', views.knowledge_base, name='knowledge_base'),
+    path('kapcsolat/', views.contact, name='contact'),
 ]

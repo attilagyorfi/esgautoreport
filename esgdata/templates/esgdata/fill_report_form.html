@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block title %}Kérdőív Kitöltése - {{ report.company.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>{{ report.report_type.name }}</h2>
+                    <p class="mb-0">
+                        <strong>Vállalat:</strong> {{ report.company.name }} | 
+                        <strong>Jelentési Év:</strong> {{ report.period_year }}
+                    </p>
+                </div>
+                {# Kitöltöttségi mutató #}
+                <div class="text-end">
+                    <h4>Kitöltöttség</h4>
+                    <span class="fs-4 fw-bold">{{ answered_count }} / {{ total_questions_count }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <ul class="nav nav-tabs" id="esgPillarTab" role="tablist">
+                    </ul>
+
+                <div class="tab-content pt-4" id="esgPillarTabContent">
+                    </div>
+                
+                {# ÚJ, KÉT GOMBOS ELRENDEZÉS #}
+                <hr class="mt-4">
+                <div class="row mt-4">
+                    <div class="col-md-6 mb-2">
+                        <button type="submit" name="save_only" value="1" class="btn btn-secondary btn-lg w-100">
+                            Mentés
+                        </button>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        {# A generálás gomb csak akkor aktív, ha minden ki van töltve #}
+                        <button type="submit" name="generate_report" value="1" class="btn btn-success btn-lg w-100" {% if not all_questions_answered %}disabled{% endif %}>
+                            Jelentés Generálása
+                        </button>
+                        {% if not all_questions_answered %}
+                            <small class="form-text text-muted">A jelentés generálásához kérjük, válaszolja meg az összes kérdést.</small>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

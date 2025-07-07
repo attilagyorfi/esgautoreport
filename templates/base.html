@@ -33,16 +33,16 @@
                             <a class="nav-link {% if request.resolver_match.view_name == 'dashboard:about_us' %}active{% endif %}" href="{% url 'dashboard:about_us' %}">Rólunk</a>
                         </li>
                          <li class="nav-item dropdown">
-                             <a class="nav-link dropdown-toggle {% if request.resolver_match.app_name == 'esgdata' or request.resolver_match.view_name == 'dashboard:data_management_overview' %}active{% endif %}" href="#" id="dataManagementDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Adatkezelés
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="dataManagementDropdown">
-                                <li><a class="dropdown-item {% if request.resolver_match.view_name == 'dashboard:data_management_overview' %}active{% endif %}" href="{% url 'dashboard:data_management_overview' %}">Áttekintés és Leírás</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                {# JAVÍTOTT SOR #}
-                                <li><a class="dropdown-item {% if request.resolver_match.view_name == 'esgdata:create_report_selection' %}active{% endif %}" href="{% url 'esgdata:create_report_selection' %}">ESG Jelentés Készítése</a></li>
-                                <li><a class="dropdown-item" href="#">Korábbi Jelentések (hamarosan)</a></li>
-                            </ul>
+                            <a class="nav-link dropdown-toggle {% if request.resolver_match.app_name == 'esgdata' %}active{% endif %}" href="#" id="dataManagementDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Adatkezelés
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="dataManagementDropdown">
+                            {# JAVÍTVA: Csak a releváns link maradt #}
+                            <li><a class="dropdown-item {% if request.resolver_match.view_name == 'esgdata:create_report_selection' %}active{% endif %}" href="{% url 'esgdata:create_report_selection' %}">ESG Jelentés Készítése</a></li>
+                            <li><a class="dropdown-item" href="#">Korábbi Jelentések (hamarosan)</a></li>
+                        </ul>
+                        </li>
+                        </ul>
                         </li>
                          <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.view_name == 'dashboard:knowledge_base' %}active{% endif %}" href="{% url 'dashboard:knowledge_base' %}">Tudástár</a>
@@ -58,7 +58,7 @@
                                     {{ user.username }}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuDropdown">
-                                    <li><a class="dropdown-item" href="#">Profilom (hamarosan)</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'dashboard:profile' %}">Profilom</a></li>
                                     {% if user.is_superuser %}
                                     <li><a class="dropdown-item" href="{% url 'admin:index' %}">Adminisztráció</a></li>
                                     {% endif %}

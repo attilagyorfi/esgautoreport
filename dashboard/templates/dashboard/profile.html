@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Profilom{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <h2>Profil és Beállítások</h2>
+    <p class="text-muted">Itt kezelheti a vállalati adatokat és a jelentésekkel kapcsolatos teendőket.</p>
+    <hr>
+
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h4>Vállalati Adatok Szerkesztése</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Adatok Mentése</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">
+            <h4>Folyamatban lévő és Befejezett Jelentések</h4>
+        </div>
+        <div class="card-body">
+            {% if reports %}
+                <div class="list-group">
+                    {% for report in reports %}
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center flex-wrap">
+                            <div class="me-3 mb-2">
+                                <h5 class="mb-1">{{ report.report_type.name }} - {{ report.period_year }}</h5>
+                                {% with total_questions=report.report_type.questions.count %}
+                                    {% if total_questions > 0 %}
+                                        <p class="mb-1">
+                                            Kitöltöttség: <strong>{{ report.answered_count }} / {{ total_questions }}</strong>
+                                        </p>
+                                        <div class="progress" style="height: 5px;">
+                                            <div class="progress-bar" role="progressbar" style="width: {% widthratio report.answered_count total_questions 100 %}%"></div>
+                                        </div>
+                                    {% else %}
+                                        <p class="mb-1 text-muted">Ehhez a kérdőívhez nincsenek kérdések rendelve.</p>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div class="ms-auto">
+                                <a href="{% url 'esgdata:fill_report' report.id %}" class="btn btn-outline-primary btn-sm">Szerkesztés</a>
+                                
+                                {% if report.report_type.questions.count == report.answered_count %}
+                                    {% if report.report_type.questions.count > 0 %}
+                                        <a href="{% url 'reports:view_report' report.id %}" class="btn btn-success btn-sm">Jelentés Megtekintése</a>
+                                    {% else %}
+                                        <a href="#" class="btn btn-secondary btn-sm disabled">Nincs kérdés</a>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="#" class="btn btn-success btn-sm disabled" title="A generáláshoz töltse ki a teljes kérdőívet">Generálás</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">Még nincsenek elkezdett jelentései. Kezdjen egy újat az "ESG Jelentés Készítése" menüpontban!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %} {# EZ A LEZÁRÓ TAG HIÁNYZOTT #}

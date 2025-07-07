@@ -1,49 +1,76 @@
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, render
-from django.template.loader import render_to_string
-from weasyprint import HTML
-
-from .models import ReportGenerationRequest
-from esgdata.models import CompanyDataEntry
-from companies.models import CompanyProfile
-
-# A login_required dekorátort érdemes használni, hogy csak bejelentkezett felhasználók érhessék el
+from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from esgdata.models import CompanyDataEntry, ChoiceOption
+from companies.models import CompanyProfile
+from django.core.exceptions import ObjectDoesNotExist
+
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+
+from .chart_utils import generate_pie_chart
+# Importáljuk az új javaslat generáló segédfüggvényt
+from .suggestion_utils import generate_suggestions
+
+# A többi nézet és a render_pdf_view függvény változatlan marad...
+def render_pdf_view(template_path, context={}):
+    template = get_template(template_path)
+    html = template.render(context)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="esg_report.pdf"'
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('Hiba történt a PDF generálása közben.')
+    return response
 
 @login_required
-def generate_report_view(request, request_id):
-    """
-    Ez a nézet legenerál egy PDF jelentést egy ReportGenerationRequest alapján.
-    """
-    # 1. Kérjük le a riport generálási kérelmet
-    report_request = get_object_or_404(ReportGenerationRequest, pk=request_id, company__user_profiles__user=request.user)
+def generate_html_report(request):
+    context = {}
+    try:
+        company = request.user.profile.company
+        if not company:
+            raise ObjectDoesNotExist
+        data_entries = CompanyDataEntry.objects.filter(company=company)
+        context['company'] = company
+        context['data_entries'] = data_entries
+    except ObjectDoesNotExist:
+        context['error'] = "Ehhez a felhasználóhoz nincs vállalat rendelve."
+    except Exception as e:
+        context['error'] = f"Ismeretlen hiba történt: {e}"
+    return render(request, 'reports/report_template.html', context)
+# ...
 
-    # 2. Gyűjtsük össze a releváns adatokat
-    company = report_request.company
-    reporting_period = report_request.reporting_period
-    
-    # Itt az összes, az adott céghez és periódushoz tartozó adatpontot gyűjtjük le.
-    # Ezt később lehet finomítani a riport típus (questionnaire_type) alapján.
-    data_entries = CompanyDataEntry.objects.filter(
-        company=company,
-        reporting_period=reporting_period
-    ).order_by('data_point__pillar', 'data_point__datapoint_id')
+@login_required
+def generate_pdf_report(request):
+    """Nézet a vállalati ESG jelentés PDF változatának generálásához és letöltéséhez."""
+    try:
+        company = request.user.profile.company
+        if not company:
+            raise ObjectDoesNotExist
 
-    # 3. Rendereljük a HTML sablont a kontextussal
-    context = {
-        'company': company,
-        'reporting_period': reporting_period,
-        'data_entries': data_entries,
-        'generation_date': report_request.created_at,
-    }
-    html_string = render_to_string('reports/report_template.html', context)
+        data_entries = CompanyDataEntry.objects.filter(company=company).select_related('data_point', 'choice_option')
+        
+        # Kategóriák és diagram generálása (ez a rész változatlan)
+        categorized_entries = {}
+        for entry in data_entries:
+            pillar_name = entry.data_point.get_pillar_display()
+            if pillar_name not in categorized_entries:
+                categorized_entries[pillar_name] = []
+            categorized_entries[pillar_name].append(entry)
+        chart_image = generate_pie_chart(categorized_entries)
+        
+        # Itt hívjuk meg a javaslatgeneráló függvényt
+        suggestions = generate_suggestions(data_entries)
 
-    # 4. WeasyPrint segítségével konvertáljuk a HTML-t PDF-fé
-    html = HTML(string=html_string, base_url=request.build_absolute_uri())
-    pdf = html.write_pdf()
+        context = {
+            'company': company,
+            'categorized_entries': categorized_entries,
+            'chart_image': chart_image,
+            'suggestions': suggestions, # Átadjuk a javaslatokat a sablonnak
+        }
+        return render_pdf_view('reports/report_pdf_template.html', context)
 
-    # 5. Adjuk vissza a PDF-et HTTP válaszként
-    response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="esg_report_{company.name}_{reporting_period}.pdf"'
-    
-    return response
+    except ObjectDoesNotExist:
+         return HttpResponse("Hiba: Ehhez a felhasználóhoz nincs vállalat rendelve.", status=404)
+    except Exception as e:
+        return HttpResponse(f"Hiba a PDF generálás során: {e}", status=500)

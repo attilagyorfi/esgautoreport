@@ -1,109 +1,103 @@
 # esgdata/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .forms import ESGReportCreationInitialForm
-from companies.models import CompanyProfile
-from .models import ESGDataPoint, CompanyDataEntry
-from django.contrib import messages
-from django.db import transaction
-from decimal import Decimal, InvalidOperation
+from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
 from django.urls import reverse
+from django.contrib import messages
+from .models import Report, EsgDataPoint, CompanyDataEntry
+from .forms import ReportSelectionForm
 
 @login_required
 def create_report_selection_view(request):
-    """
-    1. lépés: Megjeleníti a kiválasztó űrlapot (Cég, Év, Jelentéstípus),
-    és sikeres kiválasztás után átirányít a kitöltő oldalra.
-    """
-    if request.method == 'POST':
-        form = ESGReportCreationInitialForm(request.POST, user=request.user)
-        if form.is_valid():
-            company = form.cleaned_data['company']
-            year = form.cleaned_data['period_year']
-            report_type_key = form.cleaned_data['report_type']
-            
-            # Átirányítás a kitöltő nézetre az URL-ben átadott paraméterekkel
-            return redirect(reverse('esgdata:fill_report', kwargs={
-                'company_id': company.pk,
-                'year': int(year),
-                'report_type_key': report_type_key
-            }))
-    else: # GET kérés
-        form = ESGReportCreationInitialForm(user=request.user)
+    try:
+        initial_data = {'company': request.user.profile.company}
+    except (AttributeError, ObjectDoesNotExist):
+        return redirect('dashboard:company_setup')
 
-    context = {
-        'form': form,
-        'page_title': 'ESG Jelentés Készítése - Kiválasztás',
-    }
-    return render(request, 'esgdata/create_report_selection.html', context)
+    if request.method == 'POST':
+        form = ReportSelectionForm(request.POST)
+        if form.is_valid():
+            report, created = Report.objects.get_or_create(
+                company=form.cleaned_data['company'],
+                period_year=form.cleaned_data['period_year'],
+                report_type=form.cleaned_data['report_type'],
+                defaults={'created_by': request.user}
+            )
+            return redirect(reverse('esgdata:fill_report', kwargs={'report_id': report.id}))
+    else:
+        form = ReportSelectionForm(initial=initial_data)
+
+    return render(request, 'esgdata/create_report_selection.html', {'form': form})
+
 
 @login_required
-def fill_report_view(request, company_id, year, report_type_key):
-    """
-    2. lépés: Megjeleníti a kiválasztott jelentéshez tartozó kérdéseket,
-    és kezeli a válaszok mentését.
-    """
-    company = get_object_or_404(CompanyProfile, pk=company_id)
-    report_type_display = dict(ESGReportCreationInitialForm.QUESTIONNAIRE_TYPE_CHOICES).get(report_type_key, "Ismeretlen")
+def fill_report_view(request, report_id):
+    from .models import Report, EsgDataPoint, CompanyDataEntry
 
-    # Itt szűrjük a kérdéseket a megadott jelentéstípusra!
-    # Ehhez az ESGDataPoint modellen kell egy mező, ami ezt tárolja.
-    # A korábbi megbeszélés alapján ez az `applies_to_questionnaire_type`.
-    all_questions = ESGDataPoint.objects.filter(
-        applies_to_questionnaire_type=report_type_key
-    ).order_by('pillar', 'question_number') # Csoportosítás pillér/témakör szerint
+    # JAVÍTÁS: A get_object_or_404 helyett egy try-except blokkot használunk
+    try:
+        report = Report.objects.get(id=report_id, created_by=request.user)
+    except Report.DoesNotExist:
+        messages.error(request, "A keresett jelentés nem létezik, vagy nincs jogosultsága megtekinteni.")
+        return redirect('esgdata:create_report_selection')
 
-    # Kérdések szétosztása szekciókba a 'pillar' mezőjük alapján
-    questions_by_pillar = {
-        'datasheet': [], 'environmental': [], 'social': [], 'governance': [], 'ghg_targets': []
-    }
-    for q in all_questions:
-        if q.pillar in questions_by_pillar:
-            questions_by_pillar[q.pillar].append(q)
+    all_questions = report.report_type.questions.all()
+    total_questions_count = all_questions.count()
 
-    # Meglévő válaszok betöltése az előtöltéshez
-    existing_answers = {}
-    for q_dp in all_questions:
-        try:
-            entry = CompanyDataEntry.objects.get(company=company, data_point=q_dp, period_year=year)
-            # Itt a get_display_value egy javasolt modell metódus lenne, ami visszaadja a helyes értéket
-            existing_answers[q_dp.pk] = entry.get_display_value()
-        except CompanyDataEntry.DoesNotExist:
-            existing_answers[q_dp.pk] = None
+    if request.method == 'POST':
+        # --- Adatok mentése ---
+        for question in all_questions:
+            field_name = f'question_{question.id}'
+            value = request.POST.get(field_name)
 
-    if request.method == 'POST' and 'save_answers' in request.POST:
-        with transaction.atomic():
-            for question_dp in all_questions:
-                answer_key = f'answer_q_{question_dp.pk}'
-                posted_value = request.POST.get(answer_key)
-                file_value = request.FILES.get(answer_key)
-
-                defaults = {'entered_by': request.user}
-                question_dp.set_value_for_entry(defaults, posted_value, file_value)
-
+            if value and value.isdigit(): # Csak akkor mentünk, ha van érték és az szám (ID)
+                choice = ChoiceOption.objects.get(id=value)
                 CompanyDataEntry.objects.update_or_create(
-                    company=company, data_point=question_dp, period_year=year,
-                    defaults=defaults
+                    report=report,
+                    data_point=question,
+                    defaults={'choice_option': choice}
                 )
+            else: # Ha az érték üres, töröljük a korábbi választ
+                CompanyDataEntry.objects.filter(report=report, data_point=question).delete()
 
-        messages.success(request, "Adatok sikeresen elmentve!")
-        return redirect(reverse('esgdata:report_submission_success'))
+        # --- Annak ellenőrzése, melyik gombot nyomták meg ---
+        if 'save_only' in request.POST:
+            # 1. eset: Csak mentés
+            messages.success(request, 'Válaszait sikeresen mentettük!')
+            return redirect(reverse('esgdata:fill_report', kwargs={'report_id': report.id}))
+        
+        elif 'generate_report' in request.POST:
+            # 2. eset: Riport generálása
+            answered_questions_count = report.entries.count()
+            if answered_questions_count < total_questions_count:
+                # Ha nincs minden kitöltve, hibaüzenetet küldünk
+                messages.error(request, f'A riport generálásához minden kérdést meg kell válaszolnia! ({answered_questions_count}/{total_questions_count} megválaszolva)')
+                return redirect(reverse('esgdata:fill_report', kwargs={'report_id': report.id}))
+            else:
+                # Ha minden rendben, átirányítunk a riport nézetre
+                messages.success(request, 'Minden kérdés megválaszolva, a riport elkészült!')
+                return redirect(reverse('reports:view_report', kwargs={'report_id': report.id}))
+
+    # --- GET kérés kezelése (ez a rész változatlan) ---
+    categorized_questions = {
+        'E': {'name': 'Környezeti', 'questions': []},
+        'S': {'name': 'Társadalmi', 'questions': []},
+        'G': {'name': 'Irányítási', 'questions': []},
+    }
+    for question in all_questions.order_by('question_id'):
+        if question.pillar in categorized_questions:
+            categorized_questions[question.pillar]['questions'].append(question)
+    
+    existing_answers = {entry.data_point.id: entry for entry in report.entries.all()}
+    answered_count = len(existing_answers)
 
     context = {
-        'page_title': f'Jelentés Kitöltése: {report_type_display}',
-        'company': company,
-        'year': year,
-        'report_type_key': report_type_key,
-        'questions_by_pillar': questions_by_pillar,
+        'report': report,
+        'categorized_questions': categorized_questions,
         'existing_answers': existing_answers,
+        'total_questions_count': total_questions_count,
+        'answered_count': answered_count,
+        'all_questions_answered': answered_count == total_questions_count
     }
-    return render(request, 'esgdata/fill_report.html', context)
-
-
-def report_submission_success_view(request):
-    """A sikeres mentést visszaigazoló oldal nézete."""
-    context = {
-        'page_title': 'Sikeres Adatmentés',
-        'message': 'Az ESG jelentéshez kapcsolódó adataidat sikeresen elmentettük!'
-    }
-    return render(request, 'esgdata/report_submission_success.html', context)
+    return render(request, 'esgdata/fill_report_form.html', context)

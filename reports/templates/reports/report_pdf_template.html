@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>ESG Jelentés - {{ company.name }}</title>
+    <style>
+        /* Alapvető oldalbeállítások */
+        @page {
+            size: a4 portrait;
+            margin: 1.5cm; /* Oldalmargók */
+        }
+
+        /* Címoldal specifikus beállítások */
+        @page title_page {
+            @frame header_frame { display: none; }
+            @frame footer_frame { display: none; }
+        }
+
+        /* Tartalomoldalak beállításai */
+        @page content_pages {
+            @frame header_frame {
+                -pdf-frame-content: header_content;
+                top: 1cm; left: 1.5cm; right: 1.5cm; height: 1cm;
+            }
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                bottom: 1cm; left: 1.5cm; right: 1.5cm; height: 1cm;
+            }
+        }
+
+        body { font-family: "DejaVu Sans", sans-serif; font-size: 10pt; color: #333; }
+
+        /* Címoldal stílusok */
+        .title-container {
+            text-align: center;
+            margin-top: 25%;
+        }
+        .report-title { font-size: 28pt; font-weight: bold; }
+        .company-name { font-size: 20pt; margin-top: 1em; }
+        .report-date { font-size: 12pt; color: #555; margin-top: 8em; }
+        .company-details { font-size: 10pt; color: #555; margin-top: 1em; }
+        
+        /* Tartalom stílusok */
+        h2 { font-size: 18pt; color: #444; border-bottom: 2px solid #ccc; padding-bottom: 5px; margin-top: 20px; page-break-before: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        
+        /* Fej- és lábléc */
+        #header_content, #footer_content {
+            font-size: 9pt;
+            color: #666;
+        }
+        #footer_content { text-align: right; }
+        
+        /* Egyéb */
+        .page-break { page-break-before: always; }
+    </style>
+</head>
+<body>
+    <div class="title-container">
+        <div class="report-title">Vállalati ESG Jelentés</div>
+        <div class="company-name">{{ company.name }}</div>
+        <div class="report-date">Jelentés generálásának dátuma: {% now "Y. F j." %}</div>
+        <div class="company-details">
+            <p>Adószám: {{ company.tax_number|default:"N/A" }}<br>
+               Cégjegyzékszám: {{ company.registration_number|default:"N/A" }}</p>
+        </div>
+    </div>
+
+    <div class="page-break">
+        <div id="header_content">{{ company.name }} - ESG Jelentés</div>
+        <div id="footer_content">Oldal <pdf:pagenumber /></div>
+
+        {% if chart_image %}
+            <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+                <img src="data:image/png;base64,{{ chart_image }}" style="max-width: 90%;">
+            </div>
+        {% endif %}
+
+        {% for category, entries in categorized_entries.items %}
+            <h2>{{ category }}</h2>
+            {% if entries %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kérdés</th>
+                            <th>Válasz</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries %}
+                        <tr>
+                            <td>{{ entry.data_point.text }}</td>
+                            <td>
+                                {% if entry.choice_option %}
+                                    {{ entry.choice_option.text }}
+                                {% elif entry.numeric_value is not None %}
+                                    {{ entry.numeric_value }}
+                                {% elif entry.text_value %}
+                                    {{ entry.text_value }}
+                                {% elif entry.file_value %}
+                                    Feltöltött fájl
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Ebben a kategóriában nincsenek rögzített adatok.</p>
+            {% endif %}
+        {% endfor %}
+        {% if suggestions %}
+            <div class="page-break"></div>
+            <h2>Fejlesztési Javaslatok</h2>
+            <ul>
+                {% for suggestion in suggestions %}
+                    <li style="padding-bottom: 10px;">{{ suggestion }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</body>
+</html>

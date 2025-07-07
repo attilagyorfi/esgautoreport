@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}ESG Adatbevitel - {{ company.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2>ESG Kérdőív Kitöltése</h2>
+            <p class="mb-0">Vállalat: <strong>{{ company.name }}</strong></p>
+        </div>
+        <div class="card-body">
+            {% if questions %}
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <p class="text-muted">Töltse ki vagy módosítsa a lenti adatokat, majd kattintson a 'Válaszok Mentése' gombra a lap alján.</p>
+                    
+                    {% for question in questions %}
+                        <div class="form-group mb-4 p-3 border rounded">
+                            <label for="question_{{ question.id }}" class="font-weight-bold">{{ question.text }}</label>
+                            <small class="form-text text-muted mb-2">{{ question.get_pillar_display }}</small>
+                            
+                            {% if question.answer_type == 'choice' %}
+                                <select name="question_{{ question.id }}" id="question_{{ question.id }}" class="form-control">
+                                    <option value="">---------</option>
+                                    {% for option in choice_options %}
+                                        <option value="{{ option.id }}" {% if existing_answers|get_item:question.id|first == option.id %}selected{% endif %}>
+                                            {{ option.text }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            {% else %}
+                                <input type="text" name="question_{{ question.id }}" id="question_{{ question.id }}" class="form-control" value="{{ existing_answers|get_item:question.id|last|default:'' }}">
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    
+                    <button type="submit" class="btn btn-primary btn-lg">Válaszok Mentése és Riport Megtekintése</button>
+                </form>
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                    Jelenleg nincsenek aktív kérdések a rendszerben. Kérjük, töltse fel őket az adminisztrációs felületen.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
